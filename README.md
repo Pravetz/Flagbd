@@ -4,7 +4,7 @@ C++/TGUI/SFML program for creating flags.
 # Compiling(LINUX ONLY): 
 0. Be sure, that you have installed SFML and TGUI libraries. (Flagbd was written using SFML 2.4 and TGUI 0.8 so it's recommended to install these versions)
 1. Open terminal in directory of the project
-2. Paste the following command:
+2. Paste the following commands:
  ```
  chmod u+x compiler.sh
  ```
