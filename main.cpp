@@ -27,6 +27,8 @@ sf::Sprite sprite_addiheraldry;
 
 tgui::Label::Ptr label_rgb = tgui::Label::create();
 tgui::Label::Ptr label_pos_xy = tgui::Label::create();
+tgui::Label::Ptr label_scale_xy = tgui::Label::create();
+tgui::Label::Ptr label_rotated = tgui::Label::create();
 
 tgui::Slider::Ptr slider_r = tgui::Slider::create();
 tgui::Slider::Ptr slider_g = tgui::Slider::create();
@@ -38,6 +40,8 @@ tgui::Slider::Ptr slider_pos_y = tgui::Slider::create();
 
 tgui::Slider::Ptr slider_scale_x = tgui::Slider::create();
 tgui::Slider::Ptr slider_scale_y = tgui::Slider::create();
+
+tgui::Slider::Ptr rotation = tgui::Slider::create();
 
 tgui::VerticalLayout::Ptr elements_panel = tgui::VerticalLayout::create();
 tgui::BitmapButton::Ptr add_flag_button = tgui::BitmapButton::create();
@@ -53,6 +57,7 @@ tgui::BitmapButton::Ptr buttons_elements[13];
 //	frame: [0 ... 10] - frame to load from assets				 	//
 //	rgb: [255, 255, 255] - element colors						 	//
 //	pos_x, pos_y: positions of element								//
+//	scale_x, scale_y: element scaling								//
 //	element_texture: texture to load								//
 //	element_sprite: sprite of the element							//
 //////////////////////////////////////////////////////////////////////
@@ -62,6 +67,7 @@ struct element{
 	int frame;
 	int r, g, b;
 	int pos_x, pos_y;
+	float scale_x, scale_y;
 	
 	sf::Texture element_texture;
 	sf::Sprite element_sprite;
@@ -90,14 +96,22 @@ void ptr_buffer(int l){
 		slider_g->setValue(elements[store_id].g);
 		slider_b->setValue(elements[store_id].b);
 		
+		slider_scale_x->setValue(elements[store_id].scale_x);
+		slider_scale_y->setValue(elements[store_id].scale_y);
+		
 		slider_pos_x->setValue(elements[store_id].pos_x);
 		slider_pos_y->setValue(elements[store_id].pos_y);
+		
+		rotation->setValue(elements[store_id].element_sprite.getRotation());
 		
 		slider_r->connect("ValueChanged", [&](){ elements[store_id].r = slider_r->getValue(); });
 		slider_g->connect("ValueChanged", [&](){ elements[store_id].g = slider_g->getValue(); });
 		slider_b->connect("ValueChanged", [&](){ elements[store_id].b = slider_b->getValue(); });
 		slider_pos_x->connect("ValueChanged", [&](){ elements[store_id].pos_x = slider_pos_x->getValue(); });
 		slider_pos_y->connect("ValueChanged", [&](){ elements[store_id].pos_y = slider_pos_y->getValue(); });
+		slider_scale_x->connect("ValueChanged", [&](){ elements[store_id].scale_x = slider_scale_x->getValue(); });
+		slider_scale_y->connect("ValueChanged", [&](){ elements[store_id].scale_y = slider_scale_y->getValue(); });
+		rotation->connect("ValueChanged", [&](){ elements[store_id].element_sprite.setRotation(rotation->getValue()); });
 		
 		selected_e_name->setText("Selected id: "+ std::to_string(store_id)+" Frame: "+ std::to_string(elements[store_id].frame));
 	}
@@ -152,6 +166,8 @@ void add_element_heraldry(int i){
 		elements[active_elements+1].r = 0;
 		elements[active_elements+1].g = 255;
 		elements[active_elements+1].b = 255;
+		elements[active_elements+1].scale_x = 1;
+		elements[active_elements+1].scale_y = 1;
 		
 		create_element_button();
 		std::cout<<"[i] added element"<<" "<< added_elements <<std::endl;
@@ -168,6 +184,8 @@ void add_element_addiheraldry(int j){
 		elements[active_elements+1].r = 255;
 		elements[active_elements+1].g = 0;
 		elements[active_elements+1].b = 255;
+		elements[active_elements+1].scale_x = 1;
+		elements[active_elements+1].scale_y = 1;
 		
 		create_element_button();
 		std::cout<<"[i] added element"<<" "<< added_elements <<std::endl;
@@ -179,7 +197,7 @@ void add_element_addiheraldry(int j){
 int main()
 {
 	using namespace std;
-	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.1.1");
+	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.2");
 	tgui::Gui gui{window}; 
 	
 	if (!texture.create(300, 200))
@@ -193,7 +211,7 @@ int main()
 	logo_sprite.setPosition(520,2);
 	
 	///////////////////////// GUI/PANELS ///////////////////////////
-	tgui::Panel::Ptr properties_panel = tgui::Panel::create();
+	tgui::ScrollablePanel::Ptr properties_panel = tgui::ScrollablePanel::create();
 	tgui::ScrollablePanel::Ptr heraldry_panel = tgui::ScrollablePanel::create();
 	tgui::ScrollablePanel::Ptr addiheraldry_panel = tgui::ScrollablePanel::create();
 	tgui::Panel::Ptr stripes_panel = tgui::Panel::create();
@@ -254,12 +272,12 @@ int main()
 	}
 	
 	////////////////////// GUI DEFINES /////////////////////////////
-	properties_panel->setSize(272,191);
+	properties_panel->setSize(288,191);
 	elements_panel->setSize(144,165);
 	heraldry_panel->setSize(278,152);
 	addiheraldry_panel->setSize(278,152);
 	stripes_panel->setSize(143,165);
-	properties_panel->setPosition(325,20);
+	properties_panel->setPosition(313,20);
 	elements_panel->setPosition(5,232);
 	heraldry_panel->setPosition(320,245);
 	addiheraldry_panel->setPosition(320,245);
@@ -349,6 +367,9 @@ int main()
 	tgui::Label::Ptr label_b = tgui::Label::create();
 	tgui::Label::Ptr label_pos_x = tgui::Label::create();
 	tgui::Label::Ptr label_pos_y = tgui::Label::create();
+	tgui::Label::Ptr label_scale_x = tgui::Label::create();
+	tgui::Label::Ptr label_scale_y = tgui::Label::create();
+	tgui::Label::Ptr label_rotate = tgui::Label::create();
 	
 	slider_r->setMinimum(0);
 	slider_r->setMaximum(255);
@@ -369,6 +390,9 @@ int main()
 	slider_scale_x->setStep(0.1);
 	slider_scale_y->setStep(0.1);
 	
+	rotation->setMinimum(0);
+	rotation->setMaximum(360);
+	
 	slider_r->setSize(243,11);
 	slider_g->setSize(243,11);
 	slider_b->setSize(243,11);
@@ -384,10 +408,13 @@ int main()
 	selected_e_name->setSize(264,16);
 	selected_e_name->setPosition(4,4);
 	
-	slider_scale_x->setSize(211,10);
-	slider_scale_y->setSize(211,10);
-	slider_scale_x->setPosition(56,140);
-	slider_scale_y->setPosition(56,160);
+	slider_scale_x->setSize(201,10);
+	slider_scale_y->setSize(201,10);
+	slider_scale_x->setPosition(66,144);
+	slider_scale_y->setPosition(66,164);
+	
+	rotation->setSize(201,10);
+	rotation->setPosition(60,204);
 	
 	label_r->setSize(20,16);
 	label_g->setSize(20,16);
@@ -396,16 +423,35 @@ int main()
 	label_g->setPosition(6,48);
 	label_b->setPosition(6,68);
 	
+	label_scale_x->setSize(55,16);
+	label_scale_y->setSize(55,16);
+	label_scale_x->setPosition(5,144);
+	label_scale_y->setPosition(5,164);
+	
 	label_rgb->setSize(90,15);
 	label_rgb->setTextSize(9);
 	label_rgb->setPosition(200,80);
 	label_pos_xy->setSize(90,15);
 	label_pos_xy->setTextSize(9);
 	label_pos_xy->setPosition(218,130);
+	label_scale_xy->setSize(150,15);
+	label_scale_xy->setTextSize(9);
+	label_scale_xy->setPosition(150,180);
+	label_rotated->setSize(100,15);
+	label_rotated->setTextSize(9);
+	label_rotated->setPosition(200,220);
+	
+	label_rotate->setSize(55,16);
+	label_rotate->setPosition(5,200);
 	
 	label_r->setText("R:");
 	label_g->setText("G:");
 	label_b->setText("B:");
+	
+	label_scale_x->setText("scale x:");
+	label_scale_y->setText("scale y:");
+	
+	label_rotate->setText("rotate:");
 	
 	label_pos_x->setSize(51,15);
 	label_pos_y->setSize(51,15);
@@ -428,15 +474,22 @@ int main()
 	
 	properties_panel->add(slider_pos_x);
 	properties_panel->add(slider_pos_y);
+	
 	properties_panel->add(selected_e_name);
 	properties_panel->add(label_rgb);
 	properties_panel->add(label_pos_xy);
+	properties_panel->add(label_scale_xy);
 	
 	//	scaling is currently not working properly, 
 	//	therefore it's disabled
 	
-	//properties_panel->add(slider_scale_x);
-	//properties_panel->add(slider_scale_y);
+	properties_panel->add(slider_scale_x);
+	properties_panel->add(slider_scale_y);
+	properties_panel->add(label_scale_x);
+	properties_panel->add(label_scale_y);
+	properties_panel->add(rotation);
+	properties_panel->add(label_rotate);
+	properties_panel->add(label_rotated);
 	
 	stripes_panel->add(bicolor_group1);
 	stripes_panel->add(bicolor_group2);
@@ -484,21 +537,21 @@ int main()
 					elements[i].element_texture.loadFromFile("assets/heraldry/"+to_string(elements[i].frame)+".png");
 					elements[i].element_sprite.setTexture(elements[i].element_texture);
 					elements[i].element_sprite.setColor(sf::Color(elements[i].r, elements[i].g, elements[i].b));
-					if(elements[i].frame < 8 || (elements[i].frame > 11 && elements[i].frame < 18 )){
-							elements[i].element_sprite.setPosition(elements[i].pos_x,elements[i].pos_y);
-						}
+					elements[i].element_sprite.setScale(elements[i].scale_x, elements[i].scale_y);
+					elements[i].element_sprite.setPosition(elements[i].pos_x,elements[i].pos_y);
 				}
 			if(elements[i].type == 3){
 					elements[i].element_texture.loadFromFile("assets/additional heraldry/"+to_string(elements[i].frame)+".png");
 					elements[i].element_sprite.setTexture(elements[i].element_texture);
 					elements[i].element_sprite.setColor(sf::Color(elements[i].r, elements[i].g, elements[i].b));
-					if(elements[i].frame == 0 ){
-							elements[i].element_sprite.setPosition(elements[i].pos_x,elements[i].pos_y);
-						}
+					elements[i].element_sprite.setScale(elements[i].scale_x, elements[i].scale_y);
+					elements[i].element_sprite.setPosition(elements[i].pos_x,elements[i].pos_y);
 				}
 		}
 		label_rgb->setText("("+std::to_string(elements[store_id].r)+"; "+std::to_string(elements[store_id].g)+"; "+std::to_string(elements[store_id].b)+")");
 		label_pos_xy->setText("("+std::to_string(elements[store_id].pos_x)+"; "+std::to_string(elements[store_id].pos_y)+")");
+		label_scale_xy->setText("("+std::to_string(elements[store_id].scale_x)+"; "+std::to_string(elements[store_id].scale_y)+")");
+		label_rotated->setText("("+std::to_string(elements[store_id].element_sprite.getRotation())+")");
 		
 		if(store_id == 0){
 				del_flag_button->setEnabled(false);
