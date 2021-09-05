@@ -25,6 +25,9 @@ sf::Sprite sprite_heraldry;
 sf::Texture logo_texture;
 sf::Sprite sprite_addiheraldry;
 
+tgui::Label::Ptr label_rgb = tgui::Label::create();
+tgui::Label::Ptr label_pos_xy = tgui::Label::create();
+
 tgui::Slider::Ptr slider_r = tgui::Slider::create();
 tgui::Slider::Ptr slider_g = tgui::Slider::create();
 tgui::Slider::Ptr slider_b = tgui::Slider::create();
@@ -109,7 +112,15 @@ void element_alloc(){
 void create_element_button(){
 		buttons_elements[active_elements+1] = tgui::BitmapButton::create();
 		buttons_elements[active_elements+1]->setSize(125,32);
-		buttons_elements[active_elements+1]->setText(std::to_string(elements[active_elements+1].frame));
+		if(elements[active_elements+1].type == 1){
+			buttons_elements[active_elements+1]->setImage("assets/flagmain.png");
+		}
+		if(elements[active_elements+1].type == 2){
+			buttons_elements[active_elements+1]->setImage("assets/heraldry/"+std::to_string(elements[active_elements+1].frame)+".png");
+		}
+		if(elements[active_elements+1].type == 3){
+			buttons_elements[active_elements+1]->setImage("assets/additional heraldry/"+std::to_string(elements[active_elements+1].frame)+".png");
+		}
 		buttons_elements[active_elements+1]->setImageScaling(1);
 		buttons_elements[active_elements+1]->connect("pressed", ptr_buffer, active_elements+1);
 		elements_panel->add(buttons_elements[active_elements+1]);
@@ -168,7 +179,7 @@ void add_element_addiheraldry(int j){
 int main()
 {
 	using namespace std;
-	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.1");
+	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.1.1");
 	tgui::Gui gui{window}; 
 	
 	if (!texture.create(300, 200))
@@ -385,6 +396,13 @@ int main()
 	label_g->setPosition(6,48);
 	label_b->setPosition(6,68);
 	
+	label_rgb->setSize(90,15);
+	label_rgb->setTextSize(9);
+	label_rgb->setPosition(200,80);
+	label_pos_xy->setSize(90,15);
+	label_pos_xy->setTextSize(9);
+	label_pos_xy->setPosition(218,130);
+	
 	label_r->setText("R:");
 	label_g->setText("G:");
 	label_b->setText("B:");
@@ -411,6 +429,8 @@ int main()
 	properties_panel->add(slider_pos_x);
 	properties_panel->add(slider_pos_y);
 	properties_panel->add(selected_e_name);
+	properties_panel->add(label_rgb);
+	properties_panel->add(label_pos_xy);
 	
 	//	scaling is currently not working properly, 
 	//	therefore it's disabled
@@ -477,6 +497,8 @@ int main()
 						}
 				}
 		}
+		label_rgb->setText("("+std::to_string(elements[store_id].r)+"; "+std::to_string(elements[store_id].g)+"; "+std::to_string(elements[store_id].b)+")");
+		label_pos_xy->setText("("+std::to_string(elements[store_id].pos_x)+"; "+std::to_string(elements[store_id].pos_y)+")");
 		
 		if(store_id == 0){
 				del_flag_button->setEnabled(false);
