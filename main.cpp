@@ -1,12 +1,14 @@
 #include <TGUI/TGUI.hpp>
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
 #include <string>
 
 
 int w=600;
 int h=400;
 
-int heraldry=19;			// CHANGE THESE VARIABLES AFTER ADDIG NEW
+int heraldry=20;			// CHANGE THESE VARIABLES AFTER ADDIG NEW
 int adh=10;					// HERALDRY
 							// ALSO REMEMBER, THAT ELEMENT IDS BEGIN FROM 0
 
@@ -43,13 +45,19 @@ tgui::Slider::Ptr slider_scale_y = tgui::Slider::create();
 
 tgui::Slider::Ptr rotation = tgui::Slider::create();
 
-tgui::VerticalLayout::Ptr elements_panel = tgui::VerticalLayout::create();
+tgui::ScrollablePanel::Ptr elements_panel = tgui::ScrollablePanel::create();
+tgui::HorizontalWrap::Ptr elements_wrapper = tgui::HorizontalWrap::create();
+
+int wrapper_y = 32;
+
+tgui::ScrollbarChildWidget::Ptr elements_panel_scrollbar = tgui::ScrollbarChildWidget::create();
+
 tgui::BitmapButton::Ptr add_flag_button = tgui::BitmapButton::create();
 tgui::Button::Ptr save_button = tgui::Button::create();
 tgui::Button::Ptr save_button_tga = tgui::Button::create();
 tgui::Button::Ptr save_button_bmp = tgui::Button::create();
 tgui::Button::Ptr save_button_jpeg = tgui::Button::create();
-tgui::BitmapButton::Ptr buttons_elements[13];
+tgui::BitmapButton::Ptr buttons_elements[32];
 
 
 ///////////////////////////ELEMENT DEFINES////////////////////////////
@@ -73,7 +81,7 @@ struct element{
 	sf::Sprite element_sprite;
 };
 
-element elements[13];
+element elements[32];
 
 		//////////////////////////////////////////////
 		// [i] - information for debugging			//
@@ -117,7 +125,7 @@ void ptr_buffer(int l){
 	}
 
 void element_alloc(){
-		for(int i=0; i<13; i++){
+		for(int i=0; i<32; i++){
 				if(elements[i].type == 1 || elements[i].type == 2 || elements[i].type == 3)
 				active_elements = i;
 			}
@@ -137,7 +145,9 @@ void create_element_button(){
 		}
 		buttons_elements[active_elements+1]->setImageScaling(1);
 		buttons_elements[active_elements+1]->connect("pressed", ptr_buffer, active_elements+1);
-		elements_panel->add(buttons_elements[active_elements+1]);
+		wrapper_y += 32;
+		std::cout<<wrapper_y<<std::endl;
+		elements_wrapper->add(buttons_elements[active_elements+1]);
 	
 	}
 
@@ -197,8 +207,10 @@ void add_element_addiheraldry(int j){
 int main()
 {
 	using namespace std;
-	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.2");
+	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.3");
 	tgui::Gui gui{window}; 
+	
+	srand(time(0));
 	
 	if (!texture.create(300, 200))
 	{
@@ -283,6 +295,8 @@ int main()
 	addiheraldry_panel->setPosition(320,245);
 	stripes_panel->setPosition(151,232);
 	
+	
+	
 	button_heraldry->setImage("assets/gui/heraldry_icon.png");
 	button_addiheraldry->setImage("assets/gui/additional_heraldry_icon.png");
 	add_flag_button->setImage("assets/gui/flagmain_icon.png");
@@ -332,7 +346,7 @@ int main()
 	button_heraldry->connect("pressed", heraldry_panel_heraldry);
 	button_addiheraldry->connect("pressed", heraldry_panel_addiheraldry);
 	add_flag_button->connect("pressed", add_flagmain);
-	del_flag_button->connect("pressed", [&](){ elements[store_id] = elements[0]; elements_panel->remove(buttons_elements[store_id]); added_elements--; std::cout<<added_elements<<std::endl; });
+	del_flag_button->connect("pressed", [&](){ elements[store_id] = elements[0]; elements_wrapper->remove(buttons_elements[store_id]); added_elements--; wrapper_y -= 32; std::cout<<added_elements<<" "<<wrapper_y<<std::endl; });
 	save_button->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".png"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".png"<<std::endl; });
 	save_button_bmp->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".bmp"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".bmp"<<std::endl; });
 	save_button_tga->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".tga"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".tga"<<std::endl; });
@@ -345,6 +359,7 @@ int main()
 	tricolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 16 && store_id < 4 ) { elements[store_id].pos_y = (store_id - 1) * 67; } });
 	tricolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 12 && store_id < 4 ) { elements[store_id].pos_x = (store_id - 1) * 100; } });
 	
+	elements_panel->add(elements_wrapper);
 	
 	gui.add(properties_panel);
 	gui.add(elements_panel);
@@ -383,9 +398,9 @@ int main()
 	slider_pos_y->setMinimum(0);
 	slider_pos_y->setMaximum(200);
 	
-	slider_scale_x->setMinimum(0);
+	slider_scale_x->setMinimum(-1);
 	slider_scale_x->setMaximum(2);
-	slider_scale_y->setMinimum(0);
+	slider_scale_y->setMinimum(-1);
 	slider_scale_y->setMaximum(2);
 	slider_scale_x->setStep(0.1);
 	slider_scale_y->setStep(0.1);
@@ -480,9 +495,6 @@ int main()
 	properties_panel->add(label_pos_xy);
 	properties_panel->add(label_scale_xy);
 	
-	//	scaling is currently not working properly, 
-	//	therefore it's disabled
-	
 	properties_panel->add(slider_scale_x);
 	properties_panel->add(slider_scale_y);
 	properties_panel->add(label_scale_x);
@@ -510,6 +522,8 @@ int main()
 			gui.handleEvent(event); // Pass the event to the widgets
 		}
 		
+		elements_wrapper->setSize(128,wrapper_y);
+		
 		texture.clear(sf::Color::White);
 		
 		/////////////////////// FLAG ELEMENTS //////////////////////////
@@ -527,7 +541,7 @@ int main()
 		
 		////////////////// FLAG ELEMENTS PROCESS ///////////////////////
 	
-		for(int i=0; i<13; i++){
+		for(int i=0; i<32; i++){
 			if(elements[i].type == 1){
 					elements[i].element_texture.loadFromFile("assets/flagmain.png");
 					elements[i].element_sprite.setTexture(elements[i].element_texture);
@@ -602,7 +616,7 @@ int main()
 				tricolor_group2->setEnabled(true);
 			}
 		
-		for(int i=0; i<13; i++){
+		for(int i=0; i<32; i++){
 			texture.draw(elements[i].element_sprite);
 		}
 		
@@ -610,7 +624,11 @@ int main()
 		sf::Sprite rendered_texture(texture.getTexture());
 		rendered_texture.setPosition(5,20);
 		
-		SAVED_FILENAME = std::to_string(added_elements)+" "+std::to_string(elements[added_elements].type)+" "+std::to_string(elements[added_elements].r+elements[added_elements].g+elements[added_elements].b);
+		int svr = (added_elements * 1024)/16;
+		
+		int pmvar = rand() % 4096;
+		
+		SAVED_FILENAME = std::to_string(added_elements+svr+elements[added_elements].r+elements[added_elements].g+elements[added_elements].b+pmvar);
 		
 		window.clear();
 		window.draw(rendered_texture);
