@@ -21,7 +21,7 @@ C++/TGUI/SFML program for creating flags.
  ./main
  ```
  # Further information: 
- Flagbd supports up to 13 elements, but this can be quite easily changed in code.
+ Flagbd supports up to 32 elements, but this can be quite easily changed in code.
  Element pictures are taken from Flaggen(https://github.com/Pravetz/sfml-flaggen)
 
  # SCREENSHOTS:
