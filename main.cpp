@@ -9,7 +9,7 @@ int w=600;
 int h=400;
 
 int heraldry=20;			// CHANGE THESE VARIABLES AFTER ADDIG NEW
-int adh=10;					// HERALDRY
+int adh=16;					// HERALDRY
 							// ALSO REMEMBER, THAT ELEMENT IDS BEGIN FROM 0
 
 int added_elements = 0;
@@ -49,8 +49,6 @@ tgui::ScrollablePanel::Ptr elements_panel = tgui::ScrollablePanel::create();
 tgui::HorizontalWrap::Ptr elements_wrapper = tgui::HorizontalWrap::create();
 
 int wrapper_y = 32;
-
-tgui::ScrollbarChildWidget::Ptr elements_panel_scrollbar = tgui::ScrollbarChildWidget::create();
 
 tgui::BitmapButton::Ptr add_flag_button = tgui::BitmapButton::create();
 tgui::Button::Ptr save_button = tgui::Button::create();
@@ -207,7 +205,7 @@ void add_element_addiheraldry(int j){
 int main()
 {
 	using namespace std;
-	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.3");
+	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.4");
 	tgui::Gui gui{window}; 
 	
 	srand(time(0));
@@ -352,12 +350,12 @@ int main()
 	save_button_tga->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".tga"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".tga"<<std::endl; });
 	save_button_jpeg->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".jpg"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".jpg"<<std::endl; });
 	
-	bicolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 14 && store_id < 3 ) { elements[store_id].pos_y = (store_id - 1) * 100; } });
-	bicolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 15 && store_id < 3 ) { elements[store_id].pos_x = (store_id - 1) * 150; } });
-	fourcolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 17 && store_id < 5 ) { elements[store_id].pos_y = (store_id - 1) * 50; } });
-	fourcolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 13 && store_id < 5 ) { elements[store_id].pos_x = (store_id - 1) * 75; } });
-	tricolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 16 && store_id < 4 ) { elements[store_id].pos_y = (store_id - 1) * 67; } });
-	tricolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 12 && store_id < 4 ) { elements[store_id].pos_x = (store_id - 1) * 100; } });
+	bicolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 14 && store_id < 3 ) { elements[store_id].pos_x = 150; elements[store_id].pos_y = store_id * 50; if(store_id == 2) { elements[store_id].pos_y += 50; } } });
+	bicolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 15 && store_id < 3 ) { elements[store_id].pos_x = store_id * 75; if(store_id == 2) { elements[store_id].pos_x += 75; } elements[store_id].pos_y = 100; } });
+	fourcolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 17 && store_id < 5 ) { if(store_id == 1) { elements[store_id].pos_y = 25; } if(store_id == 2) { elements[store_id].pos_y = 75; } if(store_id == 3) { elements[store_id].pos_y = 125; } if(store_id == 4) { elements[store_id].pos_y = 175; } elements[store_id].pos_x = 150; } });
+	fourcolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 13 && store_id < 5 ) { if(store_id == 1) { elements[store_id].pos_x = 38; } if(store_id == 2) { elements[store_id].pos_x = 113; } if(store_id == 3) { elements[store_id].pos_x = 188; } if(store_id == 4) { elements[store_id].pos_x = 263; } elements[store_id].pos_y = 100; } });
+	tricolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 16 && store_id < 4 ) { if(store_id == 1) { elements[store_id].pos_y = store_id * 33; } if(store_id == 2) { elements[store_id].pos_y = (store_id + 1) * 33; } if(store_id == 3) { elements[store_id].pos_y = 166; } elements[store_id].pos_x = 150; } });
+	tricolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 12 && store_id < 4 ) { if(store_id == 1) { elements[store_id].pos_x = store_id * 50; } if(store_id == 2){ elements[store_id].pos_x = (store_id + 1) * 50; } if(store_id == 3){ elements[store_id].pos_x = (store_id + 2) * 50; }  elements[store_id].pos_y = 100; } });
 	
 	elements_panel->add(elements_wrapper);
 	
@@ -399,9 +397,9 @@ int main()
 	slider_pos_y->setMaximum(200);
 	
 	slider_scale_x->setMinimum(-1);
-	slider_scale_x->setMaximum(2);
+	slider_scale_x->setMaximum(5);
 	slider_scale_y->setMinimum(-1);
-	slider_scale_y->setMaximum(2);
+	slider_scale_y->setMaximum(5);
 	slider_scale_x->setStep(0.1);
 	slider_scale_y->setStep(0.1);
 	
@@ -552,6 +550,7 @@ int main()
 					elements[i].element_sprite.setTexture(elements[i].element_texture);
 					elements[i].element_sprite.setColor(sf::Color(elements[i].r, elements[i].g, elements[i].b));
 					elements[i].element_sprite.setScale(elements[i].scale_x, elements[i].scale_y);
+					elements[i].element_sprite.setOrigin(elements[i].element_sprite.getLocalBounds().width/2, elements[i].element_sprite.getLocalBounds().height/2);
 					elements[i].element_sprite.setPosition(elements[i].pos_x,elements[i].pos_y);
 				}
 			if(elements[i].type == 3){
@@ -559,6 +558,7 @@ int main()
 					elements[i].element_sprite.setTexture(elements[i].element_texture);
 					elements[i].element_sprite.setColor(sf::Color(elements[i].r, elements[i].g, elements[i].b));
 					elements[i].element_sprite.setScale(elements[i].scale_x, elements[i].scale_y);
+					elements[i].element_sprite.setOrigin(elements[i].element_sprite.getLocalBounds().width/2, elements[i].element_sprite.getLocalBounds().height/2);
 					elements[i].element_sprite.setPosition(elements[i].pos_x,elements[i].pos_y);
 				}
 		}
