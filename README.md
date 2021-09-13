@@ -15,6 +15,13 @@ C++/TGUI/SFML program for creating flags.
  ```
  chmod u+x main
  ```
+ Compiling image resizer is the same process, open terminal in its directory and paste:
+  ```
+ chmod u+x compiler.sh
+ ```
+ ```
+ ./compiler.sh
+ ```
  
  # RUNNING:
  ```
