@@ -45,16 +45,18 @@ tgui::Slider::Ptr slider_scale_y = tgui::Slider::create();
 
 tgui::Slider::Ptr rotation = tgui::Slider::create();
 
+tgui::CheckBox::Ptr smooth_cb = tgui::CheckBox::create();
+
+tgui::TextBox::Ptr filename = tgui::TextBox::create();
+
 tgui::ScrollablePanel::Ptr elements_panel = tgui::ScrollablePanel::create();
 tgui::HorizontalWrap::Ptr elements_wrapper = tgui::HorizontalWrap::create();
+
+tgui::MenuBar::Ptr menu_save = tgui::MenuBar::create();
 
 int wrapper_y = 32;
 
 tgui::BitmapButton::Ptr add_flag_button = tgui::BitmapButton::create();
-tgui::Button::Ptr save_button = tgui::Button::create();
-tgui::Button::Ptr save_button_tga = tgui::Button::create();
-tgui::Button::Ptr save_button_bmp = tgui::Button::create();
-tgui::Button::Ptr save_button_jpeg = tgui::Button::create();
 tgui::BitmapButton::Ptr buttons_elements[32];
 
 
@@ -122,6 +124,16 @@ void ptr_buffer(int l){
 		selected_e_name->setText("Selected id: "+ std::to_string(store_id)+" Frame: "+ std::to_string(elements[store_id].frame));
 	}
 
+void element_smooth_on(){
+		for(int i=0; i<32; i++)
+			elements[i].element_texture.setSmooth(true);
+	}
+
+void element_smooth_off(){
+		for(int i=0; i<32; i++)
+			elements[i].element_texture.setSmooth(false);
+	}
+
 void element_alloc(){
 		for(int i=0; i<32; i++){
 				if(elements[i].type == 1 || elements[i].type == 2 || elements[i].type == 3)
@@ -176,6 +188,8 @@ void add_element_heraldry(int i){
 		elements[active_elements+1].b = 255;
 		elements[active_elements+1].scale_x = 1;
 		elements[active_elements+1].scale_y = 1;
+		elements[active_elements+1].pos_x = 150;
+		elements[active_elements+1].pos_y = 100;
 		
 		create_element_button();
 		std::cout<<"[i] added element"<<" "<< added_elements <<std::endl;
@@ -194,6 +208,9 @@ void add_element_addiheraldry(int j){
 		elements[active_elements+1].b = 255;
 		elements[active_elements+1].scale_x = 1;
 		elements[active_elements+1].scale_y = 1;
+		elements[active_elements+1].pos_x = 150;
+		elements[active_elements+1].pos_y = 100;
+		
 		
 		create_element_button();
 		std::cout<<"[i] added element"<<" "<< added_elements <<std::endl;
@@ -205,7 +222,7 @@ void add_element_addiheraldry(int j){
 int main()
 {
 	using namespace std;
-	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.4");
+	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.4.1");
 	tgui::Gui gui{window}; 
 	
 	srand(time(0));
@@ -306,14 +323,7 @@ int main()
 	tricolor_group1->setImage("assets/gui/tricolor1_icon.png");
 	tricolor_group2->setImage("assets/gui/tricolor2_icon.png");
 	
-	save_button->setText("Save(.png)");
-	save_button_tga->setText("Save(.tga)");
-	save_button_bmp->setText("Save(.bmp)");
-	save_button_jpeg->setText("Save(.jpg)");
-	save_button->setSize(75,20);
-	save_button_tga->setSize(75,20);
-	save_button_bmp->setSize(75,20);
-	save_button_jpeg->setSize(75,20);
+	
 	button_heraldry->setSize(34,24);
 	button_addiheraldry->setSize(34,24);
 	add_flag_button->setSize(34,24);
@@ -322,10 +332,18 @@ int main()
 	button_addiheraldry->setPosition(365,220);
 	add_flag_button->setPosition(402,220);
 	del_flag_button->setPosition(439,220);
-	save_button->setPosition(5,0);
-	save_button_tga->setPosition(81,0);
-	save_button_bmp->setPosition(156,0);
-	save_button_jpeg->setPosition(231,0);
+	
+	menu_save->setSize(59,18);
+	menu_save->addMenu("Save...");
+	menu_save->addMenuItem("Save...", "Save .jpg");
+	menu_save->addMenuItem("Save...", "Save .png");
+	menu_save->addMenuItem("Save...", "Save .tga");
+	menu_save->addMenuItem("Save...", "Save .bmp");
+	
+	menu_save->connectMenuItem({"Save...", "Save .jpg"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".jpg"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".jpg"<<std::endl; });
+	menu_save->connectMenuItem({"Save...", "Save .png"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".png"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".png"<<std::endl; });
+	menu_save->connectMenuItem({"Save...", "Save .tga"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".tga"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".tga"<<std::endl; });
+	menu_save->connectMenuItem({"Save...", "Save .bmp"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".bmp"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".bmp"<<std::endl; });
 	
 	bicolor_group1->setSize(36,36);
 	bicolor_group2->setSize(36,36);
@@ -341,14 +359,18 @@ int main()
 	tricolor_group1->setPosition(52,38);
 	tricolor_group2->setPosition(89,38);
 	
+	filename->setSize(200,20);
+	filename->setPosition(60,0);
+	filename->setText("Flagname");
+	
+	smooth_cb->setPosition(400,0);
+	smooth_cb->setText("Smooth");
+	smooth_cb->setSize(20,20);
+	
 	button_heraldry->connect("pressed", heraldry_panel_heraldry);
 	button_addiheraldry->connect("pressed", heraldry_panel_addiheraldry);
 	add_flag_button->connect("pressed", add_flagmain);
 	del_flag_button->connect("pressed", [&](){ elements[store_id] = elements[0]; elements_wrapper->remove(buttons_elements[store_id]); added_elements--; wrapper_y -= 32; std::cout<<added_elements<<" "<<wrapper_y<<std::endl; });
-	save_button->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".png"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".png"<<std::endl; });
-	save_button_bmp->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".bmp"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".bmp"<<std::endl; });
-	save_button_tga->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".tga"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".tga"<<std::endl; });
-	save_button_jpeg->connect("pressed", [&](){ texture.getTexture().copyToImage().saveToFile(SAVED_FILENAME+".jpg"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".jpg"<<std::endl; });
 	
 	bicolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 14 && store_id < 3 ) { elements[store_id].pos_x = 150; elements[store_id].pos_y = store_id * 50; if(store_id == 2) { elements[store_id].pos_y += 50; } } });
 	bicolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 15 && store_id < 3 ) { elements[store_id].pos_x = store_id * 75; if(store_id == 2) { elements[store_id].pos_x += 75; } elements[store_id].pos_y = 100; } });
@@ -369,10 +391,9 @@ int main()
 	gui.add(button_addiheraldry);
 	gui.add(add_flag_button);
 	gui.add(del_flag_button);
-	gui.add(save_button);
-	gui.add(save_button_bmp);
-	gui.add(save_button_jpeg);
-	gui.add(save_button_tga);
+	gui.add(filename);
+	gui.add(menu_save);
+	gui.add(smooth_cb);
 	
 	/////////////////////// PROPERTIES DEFINES /////////////////////////
 	tgui::Label::Ptr label_r = tgui::Label::create();
@@ -509,6 +530,9 @@ int main()
 	stripes_panel->add(tricolor_group2);
 	
 	
+	smooth_cb->connect("Checked", element_smooth_on);
+	smooth_cb->connect("Unchecked", element_smooth_off);
+	
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -624,11 +648,7 @@ int main()
 		sf::Sprite rendered_texture(texture.getTexture());
 		rendered_texture.setPosition(5,20);
 		
-		int svr = (added_elements * 1024)/16;
-		
-		int pmvar = rand() % 4096;
-		
-		SAVED_FILENAME = std::to_string(added_elements+svr+elements[added_elements].r+elements[added_elements].g+elements[added_elements].b+pmvar);
+		SAVED_FILENAME = filename->getText();
 		
 		window.clear();
 		window.draw(rendered_texture);
