@@ -1,16 +1,24 @@
 #include <TGUI/TGUI.hpp>
 #include <iostream>
 #include <stdlib.h>
-#include <time.h>
 #include <string>
 
 
 int w=600;
 int h=400;
 
+//////////////////////////////////////////////////////////////////
+// 				ADVICE FOR ADDING NEW ELEMENTS:					//
+//	It's recommended(but not necessary) for heraldry textures	//
+//	to be white, as it affects how the color of the element 	//
+//	will change.												//
+//////////////////////////////////////////////////////////////////
+
 int heraldry=20;			// CHANGE THESE VARIABLES AFTER ADDIG NEW
 int adh=16;					// HERALDRY
 							// ALSO REMEMBER, THAT ELEMENT IDS BEGIN FROM 0
+							// adh = assets/additional heraldry
+							// heraldry = assets/heraldry
 
 int added_elements = 0;
 int active_elements = 0;
@@ -49,8 +57,14 @@ tgui::CheckBox::Ptr smooth_cb = tgui::CheckBox::create();
 
 tgui::TextBox::Ptr filename = tgui::TextBox::create();
 
+tgui::EditBox::Ptr x_size = tgui::EditBox::create();
+tgui::EditBox::Ptr y_size = tgui::EditBox::create();
+
 tgui::ScrollablePanel::Ptr elements_panel = tgui::ScrollablePanel::create();
 tgui::HorizontalWrap::Ptr elements_wrapper = tgui::HorizontalWrap::create();
+
+tgui::HorizontalWrap::Ptr heraldry_wrapper = tgui::HorizontalWrap::create();
+tgui::HorizontalWrap::Ptr addiheraldry_wrapper = tgui::HorizontalWrap::create();
 
 tgui::MenuBar::Ptr menu_save = tgui::MenuBar::create();
 
@@ -62,7 +76,7 @@ tgui::BitmapButton::Ptr buttons_elements[32];
 
 ///////////////////////////ELEMENT DEFINES////////////////////////////
 //	type: 1 - flag, 2 - heraldic element, 3 - additional heraldry	//
-//	frame: [0 ... 10] - frame to load from assets				 	//
+//	frame: [0 ... n] - frame to load from assets				 	//
 //	rgb: [255, 255, 255] - element colors						 	//
 //	pos_x, pos_y: positions of element								//
 //	scale_x, scale_y: element scaling								//
@@ -222,14 +236,20 @@ void add_element_addiheraldry(int j){
 int main()
 {
 	using namespace std;
-	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.4.1");
+	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.5");
 	tgui::Gui gui{window}; 
 	
-	srand(time(0));
+	window.setFramerateLimit(60);
+	//////////////////////////////////////////////
+	//	Solves issues with high CPU usage,		//
+	//	if usage is still high, try lowering or	//
+	//	disabling the FPS limit.				//
+	//	Also try checking your GPU drivers.		//
+	//////////////////////////////////////////////
 	
 	if (!texture.create(300, 200))
 	{
-		return -1;
+		return EXIT_FAILURE;
 	}
 	
 	logo_texture.loadFromFile("assets/gui/flagbd_logo_80x16.png");
@@ -258,21 +278,22 @@ int main()
 	tgui::BitmapButton::Ptr buttons_heraldry[heraldry];
 	tgui::BitmapButton::Ptr buttons_addiheraldry[adh];
 	
+	
+	/////////////////////////// WRAPPERS ///////////////////////////////
+	heraldry_wrapper->setSize(264, (36*heraldry)/5);
+	heraldry_wrapper->setPosition(5,5);
+	heraldry_panel->add(heraldry_wrapper);
+	
+	addiheraldry_wrapper->setPosition(5,5);
+	addiheraldry_wrapper->setSize(264, (36*adh)/5);
+	addiheraldry_panel->add(addiheraldry_wrapper);
+	
 	for(int i=0; i<heraldry; i++){
 		buttons_heraldry[i] = tgui::BitmapButton::create();
 		buttons_heraldry[i]->setSize(36,36);
-		if(i<10){
-			buttons_heraldry[i]->setPosition(1+(i*36),1);
-		}
-		if(i==10){
-			buttons_heraldry[i]->setPosition(1,1+(i*3.7));
-		}
-		if(i>10){
-			buttons_heraldry[i]->setPosition(1+((i-10)*36),38);
-		}
 		buttons_heraldry[i]->setImage("assets/heraldry/"+to_string(i)+".png");
 		buttons_heraldry[i]->setImageScaling(1);
-		heraldry_panel->add(buttons_heraldry[i]);
+		heraldry_wrapper->add(buttons_heraldry[i]);
 		buttons_heraldry[i]->connect("pressed", add_element_heraldry, i);
 	
 		//std::cout<<"Heraldry: "<< i <<std::endl; 					// for debugging
@@ -281,18 +302,9 @@ int main()
 	for(int j=0; j<adh; j++){
 		buttons_addiheraldry[j] = tgui::BitmapButton::create();
 		buttons_addiheraldry[j]->setSize(36,36);
-		if(j<10){
-			buttons_addiheraldry[j]->setPosition(1+(j*36),1);
-		}
-		if(j==10){
-			buttons_addiheraldry[j]->setPosition(1,1+(j*3.7));
-		}
-		if(j>10){
-			buttons_addiheraldry[j]->setPosition(1+((j-10)*36),38);
-		}
 		buttons_addiheraldry[j]->setImage("assets/additional heraldry/"+to_string(j)+".png");
 		buttons_addiheraldry[j]->setImageScaling(1);
-		addiheraldry_panel->add(buttons_addiheraldry[j]);
+		addiheraldry_wrapper->add(buttons_addiheraldry[j]);
 		buttons_addiheraldry[j]->connect("pressed", add_element_addiheraldry, j);
 	
 		//std::cout<<"Additional heraldry: "<< j <<std::endl; 					// for debugging
@@ -340,10 +352,10 @@ int main()
 	menu_save->addMenuItem("Save...", "Save .tga");
 	menu_save->addMenuItem("Save...", "Save .bmp");
 	
-	menu_save->connectMenuItem({"Save...", "Save .jpg"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".jpg"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".jpg"<<std::endl; });
-	menu_save->connectMenuItem({"Save...", "Save .png"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".png"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".png"<<std::endl; });
-	menu_save->connectMenuItem({"Save...", "Save .tga"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".tga"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".tga"<<std::endl; });
-	menu_save->connectMenuItem({"Save...", "Save .bmp"}, [&](){ texture.getTexture().copyToImage().saveToFile(filename->getText()+".bmp"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".bmp"<<std::endl; });
+	menu_save->connectMenuItem({"Save...", "Save .jpg"}, [&](){ std::string s_x = x_size->getText(); std::string s_y = y_size->getText(); int x,y; x = std::stoi(s_x); y = std::stoi(s_y); sf::Sprite resized_flag(texture.getTexture()); sf::RenderTexture resized_image; resized_image.create(x, y); sf::Vector2u size_texture = texture.getSize(); float scale_x = (float) x / size_texture.x; float scale_y = (float) y / size_texture.y; resized_flag.setScale(scale_x,scale_y); resized_image.draw(resized_flag); resized_image.display(); resized_image.getTexture().copyToImage().saveToFile(filename->getText()+".jpg"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".jpg"<<std::endl; });
+	menu_save->connectMenuItem({"Save...", "Save .png"}, [&](){ std::string s_x = x_size->getText(); std::string s_y = y_size->getText(); int x,y; x = std::stoi(s_x); y = std::stoi(s_y); sf::Sprite resized_flag(texture.getTexture()); sf::RenderTexture resized_image; resized_image.create(x, y); sf::Vector2u size_texture = texture.getSize(); float scale_x = (float) x / size_texture.x; float scale_y = (float) y / size_texture.y; resized_flag.setScale(scale_x,scale_y); resized_image.draw(resized_flag); resized_image.display(); resized_image.getTexture().copyToImage().saveToFile(filename->getText()+".png"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".png"<<std::endl; });
+	menu_save->connectMenuItem({"Save...", "Save .tga"}, [&](){ std::string s_x = x_size->getText(); std::string s_y = y_size->getText(); int x,y; x = std::stoi(s_x); y = std::stoi(s_y); sf::Sprite resized_flag(texture.getTexture()); sf::RenderTexture resized_image; resized_image.create(x, y); sf::Vector2u size_texture = texture.getSize(); float scale_x = (float) x / size_texture.x; float scale_y = (float) y / size_texture.y; resized_flag.setScale(scale_x,scale_y); resized_image.draw(resized_flag); resized_image.display(); resized_image.getTexture().copyToImage().saveToFile(filename->getText()+".tga"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".tga"<<std::endl; });
+	menu_save->connectMenuItem({"Save...", "Save .bmp"}, [&](){ std::string s_x = x_size->getText(); std::string s_y = y_size->getText(); int x,y; x = std::stoi(s_x); y = std::stoi(s_y); sf::Sprite resized_flag(texture.getTexture()); sf::RenderTexture resized_image; resized_image.create(x, y); sf::Vector2u size_texture = texture.getSize(); float scale_x = (float) x / size_texture.x; float scale_y = (float) y / size_texture.y; resized_flag.setScale(scale_x,scale_y); resized_image.draw(resized_flag); resized_image.display(); resized_image.getTexture().copyToImage().saveToFile(filename->getText()+".bmp"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".bmp"<<std::endl; });
 	
 	bicolor_group1->setSize(36,36);
 	bicolor_group2->setSize(36,36);
@@ -362,6 +374,20 @@ int main()
 	filename->setSize(200,20);
 	filename->setPosition(60,0);
 	filename->setText("Flagname");
+	
+	x_size->setSize(50,20);
+	y_size->setSize(50,20);
+	x_size->setPosition(261,0);
+	y_size->setPosition(311,0);
+	
+	x_size->setInputValidator("[0-9]*");
+	y_size->setInputValidator("[0-9]*");
+	
+	x_size->setMaximumCharacters(4);
+	y_size->setMaximumCharacters(4);
+	
+	x_size->setText("300");
+	y_size->setText("200");
 	
 	smooth_cb->setPosition(400,0);
 	smooth_cb->setText("Smooth");
@@ -394,6 +420,8 @@ int main()
 	gui.add(filename);
 	gui.add(menu_save);
 	gui.add(smooth_cb);
+	gui.add(x_size);
+	gui.add(y_size);
 	
 	/////////////////////// PROPERTIES DEFINES /////////////////////////
 	tgui::Label::Ptr label_r = tgui::Label::create();
