@@ -27,6 +27,20 @@ int is_heraldry;
 
 int store_id = 0;
 
+// Saving variables for copy-pasting //
+int saved_r = 0;
+int saved_g = 0;
+int saved_b = 0;
+
+float saved_scale_x = 1;
+float saved_scale_y = 1;
+
+float saved_rotation = 0;
+
+int saved_pos_x = 0;
+int saved_pos_y = 0;
+//////////////////////////////////////
+
 std::string SAVED_FILENAME;
 
 sf::RenderTexture texture;
@@ -236,7 +250,7 @@ void add_element_addiheraldry(int j){
 int main()
 {
 	using namespace std;
-	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.5");
+	sf::RenderWindow window(sf::VideoMode(w, h, 32), "Flagbd version 0.6");
 	tgui::Gui gui{window}; 
 	
 	window.setFramerateLimit(60);
@@ -261,19 +275,22 @@ int main()
 	tgui::ScrollablePanel::Ptr properties_panel = tgui::ScrollablePanel::create();
 	tgui::ScrollablePanel::Ptr heraldry_panel = tgui::ScrollablePanel::create();
 	tgui::ScrollablePanel::Ptr addiheraldry_panel = tgui::ScrollablePanel::create();
-	tgui::Panel::Ptr stripes_panel = tgui::Panel::create();
+	tgui::Panel::Ptr edit_panel = tgui::Panel::create();
 	
 	//////////////////////// GUI/BUTTONS ///////////////////////////
 	tgui::BitmapButton::Ptr button_heraldry = tgui::BitmapButton::create();
 	tgui::BitmapButton::Ptr button_addiheraldry = tgui::BitmapButton::create();
 	tgui::BitmapButton::Ptr del_flag_button = tgui::BitmapButton::create();
 	
-	tgui::BitmapButton::Ptr bicolor_group1 = tgui::BitmapButton::create();
-	tgui::BitmapButton::Ptr bicolor_group2 = tgui::BitmapButton::create();
-	tgui::BitmapButton::Ptr fourcolor_group1 = tgui::BitmapButton::create();
-	tgui::BitmapButton::Ptr fourcolor_group2 = tgui::BitmapButton::create();
-	tgui::BitmapButton::Ptr tricolor_group1 = tgui::BitmapButton::create();
-	tgui::BitmapButton::Ptr tricolor_group2 = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr rotatemin45 = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr copy_color = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr paste_color = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr copy_scale = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr paste_scale = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr copy_rotation = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr paste_rotation = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr copy_position = tgui::BitmapButton::create();
+	tgui::BitmapButton::Ptr paste_position = tgui::BitmapButton::create();
 	
 	tgui::BitmapButton::Ptr buttons_heraldry[heraldry];
 	tgui::BitmapButton::Ptr buttons_addiheraldry[adh];
@@ -315,12 +332,12 @@ int main()
 	elements_panel->setSize(144,165);
 	heraldry_panel->setSize(278,152);
 	addiheraldry_panel->setSize(278,152);
-	stripes_panel->setSize(143,165);
+	edit_panel->setSize(143,165);
 	properties_panel->setPosition(313,20);
 	elements_panel->setPosition(5,232);
 	heraldry_panel->setPosition(320,245);
 	addiheraldry_panel->setPosition(320,245);
-	stripes_panel->setPosition(151,232);
+	edit_panel->setPosition(151,232);
 	
 	
 	
@@ -328,12 +345,15 @@ int main()
 	button_addiheraldry->setImage("assets/gui/additional_heraldry_icon.png");
 	add_flag_button->setImage("assets/gui/flagmain_icon.png");
 	del_flag_button->setImage("assets/gui/delete_element_icon.png");
-	bicolor_group1->setImage("assets/gui/bicolor1_icon.png");
-	bicolor_group2->setImage("assets/gui/bicolor2_icon.png");
-	fourcolor_group1->setImage("assets/gui/fourcolor1_icon.png");
-	fourcolor_group2->setImage("assets/gui/fourcolor2_icon.png");
-	tricolor_group1->setImage("assets/gui/tricolor1_icon.png");
-	tricolor_group2->setImage("assets/gui/tricolor2_icon.png");
+	rotatemin45->setImage("assets/gui/icon_-45d.png");
+	copy_color->setImage("assets/gui/copy_color_icon.png");
+	paste_color->setImage("assets/gui/paste_color_icon.png");
+	copy_scale->setImage("assets/gui/copy_scale_icon.png");
+	paste_scale->setImage("assets/gui/paste_scale_icon.png");
+	copy_rotation->setImage("assets/gui/copy_rotation_icon.png");
+	paste_rotation->setImage("assets/gui/paste_rotation_icon.png");
+	copy_position->setImage("assets/gui/copy_position_icon.png");
+	paste_position->setImage("assets/gui/paste_position_icon.png");
 	
 	
 	button_heraldry->setSize(34,24);
@@ -357,19 +377,25 @@ int main()
 	menu_save->connectMenuItem({"Save...", "Save .tga"}, [&](){ std::string s_x = x_size->getText(); std::string s_y = y_size->getText(); int x,y; x = std::stoi(s_x); y = std::stoi(s_y); sf::Sprite resized_flag(texture.getTexture()); sf::RenderTexture resized_image; resized_image.create(x, y); sf::Vector2u size_texture = texture.getSize(); float scale_x = (float) x / size_texture.x; float scale_y = (float) y / size_texture.y; resized_flag.setScale(scale_x,scale_y); resized_image.draw(resized_flag); resized_image.display(); resized_image.getTexture().copyToImage().saveToFile(filename->getText()+".tga"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".tga"<<std::endl; });
 	menu_save->connectMenuItem({"Save...", "Save .bmp"}, [&](){ std::string s_x = x_size->getText(); std::string s_y = y_size->getText(); int x,y; x = std::stoi(s_x); y = std::stoi(s_y); sf::Sprite resized_flag(texture.getTexture()); sf::RenderTexture resized_image; resized_image.create(x, y); sf::Vector2u size_texture = texture.getSize(); float scale_x = (float) x / size_texture.x; float scale_y = (float) y / size_texture.y; resized_flag.setScale(scale_x,scale_y); resized_image.draw(resized_flag); resized_image.display(); resized_image.getTexture().copyToImage().saveToFile(filename->getText()+".bmp"); std::cout<<"[^] Saved file: "<<SAVED_FILENAME<<".bmp"<<std::endl; });
 	
-	bicolor_group1->setSize(36,36);
-	bicolor_group2->setSize(36,36);
-	fourcolor_group1->setSize(36,36);
-	fourcolor_group2->setSize(36,36);
-	tricolor_group1->setSize(36,36);
-	tricolor_group2->setSize(36,36);
+	rotatemin45->setSize(36,36);
+	copy_color->setSize(36,36);
+	paste_color->setSize(36,36);
+	copy_scale->setSize(36,36);
+	paste_scale->setSize(36,36);
+	copy_rotation->setSize(36,36);
+	paste_rotation->setSize(36,36);
+	copy_position->setSize(36,36);
+	paste_position->setSize(36,36);
 	
-	bicolor_group1->setPosition(15,2);
-	bicolor_group2->setPosition(52,2);
-	fourcolor_group1->setPosition(89,2);
-	fourcolor_group2->setPosition(15,38);
-	tricolor_group1->setPosition(52,38);
-	tricolor_group2->setPosition(89,38);
+	rotatemin45->setPosition(15,2);
+	copy_color->setPosition(52,2);
+	paste_color->setPosition(89,2);
+	copy_scale->setPosition(15,38);
+	paste_scale->setPosition(52,38);
+	copy_rotation->setPosition(89,38);
+	paste_rotation->setPosition(15,74);
+	copy_position->setPosition(52,74);
+	paste_position->setPosition(89,74);
 	
 	filename->setSize(200,20);
 	filename->setPosition(60,0);
@@ -398,12 +424,15 @@ int main()
 	add_flag_button->connect("pressed", add_flagmain);
 	del_flag_button->connect("pressed", [&](){ elements[store_id] = elements[0]; elements_wrapper->remove(buttons_elements[store_id]); added_elements--; wrapper_y -= 32; std::cout<<added_elements<<" "<<wrapper_y<<std::endl; });
 	
-	bicolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 14 && store_id < 3 ) { elements[store_id].pos_x = 150; elements[store_id].pos_y = store_id * 50; if(store_id == 2) { elements[store_id].pos_y += 50; } } });
-	bicolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 15 && store_id < 3 ) { elements[store_id].pos_x = store_id * 75; if(store_id == 2) { elements[store_id].pos_x += 75; } elements[store_id].pos_y = 100; } });
-	fourcolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 17 && store_id < 5 ) { if(store_id == 1) { elements[store_id].pos_y = 25; } if(store_id == 2) { elements[store_id].pos_y = 75; } if(store_id == 3) { elements[store_id].pos_y = 125; } if(store_id == 4) { elements[store_id].pos_y = 175; } elements[store_id].pos_x = 150; } });
-	fourcolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 13 && store_id < 5 ) { if(store_id == 1) { elements[store_id].pos_x = 38; } if(store_id == 2) { elements[store_id].pos_x = 113; } if(store_id == 3) { elements[store_id].pos_x = 188; } if(store_id == 4) { elements[store_id].pos_x = 263; } elements[store_id].pos_y = 100; } });
-	tricolor_group1->connect("pressed", [&](){ if(elements[store_id].frame == 16 && store_id < 4 ) { if(store_id == 1) { elements[store_id].pos_y = store_id * 33; } if(store_id == 2) { elements[store_id].pos_y = (store_id + 1) * 33; } if(store_id == 3) { elements[store_id].pos_y = 166; } elements[store_id].pos_x = 150; } });
-	tricolor_group2->connect("pressed", [&](){ if(elements[store_id].frame == 12 && store_id < 4 ) { if(store_id == 1) { elements[store_id].pos_x = store_id * 50; } if(store_id == 2){ elements[store_id].pos_x = (store_id + 1) * 50; } if(store_id == 3){ elements[store_id].pos_x = (store_id + 2) * 50; }  elements[store_id].pos_y = 100; } });
+	rotatemin45->connect("pressed", [&](){ elements[store_id].element_sprite.setRotation(315); });
+	copy_color->connect("pressed", [&](){ saved_r = elements[store_id].r; saved_g = elements[store_id].g; saved_b = elements[store_id].b; });
+	paste_color->connect("pressed", [&](){ elements[store_id].r = saved_r; elements[store_id].g = saved_g; elements[store_id].b = saved_b; });
+	copy_scale->connect("pressed", [&](){ saved_scale_x = elements[store_id].scale_x; saved_scale_y = elements[store_id].scale_y; });
+	paste_scale->connect("pressed", [&](){ elements[store_id].scale_x = saved_scale_x; elements[store_id].scale_y = saved_scale_y; });
+	copy_rotation->connect("pressed", [&](){ saved_rotation = elements[store_id].element_sprite.getRotation(); });
+	paste_rotation->connect("pressed", [&](){ elements[store_id].element_sprite.setRotation(saved_rotation); });
+	copy_position->connect("pressed", [&](){ saved_pos_x = elements[store_id].pos_x; saved_pos_y = elements[store_id].pos_y; });
+	paste_position->connect("pressed", [&](){ elements[store_id].pos_x = saved_pos_x; elements[store_id].pos_y = saved_pos_y; });
 	
 	elements_panel->add(elements_wrapper);
 	
@@ -411,7 +440,7 @@ int main()
 	gui.add(elements_panel);
 	gui.add(heraldry_panel);
 	gui.remove(addiheraldry_panel);
-	gui.add(stripes_panel);
+	gui.add(edit_panel);
 	
 	gui.add(button_heraldry);
 	gui.add(button_addiheraldry);
@@ -550,12 +579,16 @@ int main()
 	properties_panel->add(label_rotate);
 	properties_panel->add(label_rotated);
 	
-	stripes_panel->add(bicolor_group1);
-	stripes_panel->add(bicolor_group2);
-	stripes_panel->add(fourcolor_group1);
-	stripes_panel->add(fourcolor_group2);
-	stripes_panel->add(tricolor_group1);
-	stripes_panel->add(tricolor_group2);
+	edit_panel->add(rotatemin45);
+	edit_panel->add(copy_color);
+	edit_panel->add(paste_color);
+	edit_panel->add(copy_scale);
+	edit_panel->add(paste_scale);
+	edit_panel->add(copy_rotation);
+	edit_panel->add(paste_rotation);
+	edit_panel->add(copy_position);
+	edit_panel->add(paste_position);
+	
 	
 	
 	smooth_cb->connect("Checked", element_smooth_on);
@@ -624,48 +657,6 @@ int main()
 			}
 		if(store_id > 0){
 				del_flag_button->setEnabled(true);
-			}
-			
-		if(elements[store_id].frame != 14){
-				bicolor_group1->setEnabled(false);
-			}
-		if(elements[store_id].frame == 14){
-				bicolor_group1->setEnabled(true);
-			}
-		
-		if(elements[store_id].frame != 15){
-				bicolor_group2->setEnabled(false);
-			}
-		if(elements[store_id].frame == 15){
-				bicolor_group2->setEnabled(true);
-			}
-			
-		if(elements[store_id].frame != 17){
-				fourcolor_group1->setEnabled(false);
-			}
-		if(elements[store_id].frame == 17){
-				fourcolor_group1->setEnabled(true);
-			}
-		
-		if(elements[store_id].frame != 13){
-				fourcolor_group2->setEnabled(false);
-			}
-		if(elements[store_id].frame == 13){
-				fourcolor_group2->setEnabled(true);
-			}
-		
-		if(elements[store_id].frame != 16){
-				tricolor_group1->setEnabled(false);
-			}
-		if(elements[store_id].frame == 16){
-				tricolor_group1->setEnabled(true);
-			}
-		
-		if(elements[store_id].frame != 12){
-				tricolor_group2->setEnabled(false);
-			}
-		if(elements[store_id].frame == 12){
-				tricolor_group2->setEnabled(true);
 			}
 		
 		for(int i=0; i<32; i++){
