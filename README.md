@@ -24,13 +24,3 @@ C++/TGUI/SFML program for creating flags.
  Flagbd supports up to 32 elements, but this can be quite easily changed in code.
  Element pictures are taken from Flaggen(https://github.com/Pravetz/sfml-flaggen)
 
- # SCREENSHOTS:
- ![flagbd_screenshot2](https://user-images.githubusercontent.com/46265909/131497098-9e87041e-47a1-4cfc-84dc-d4df5a3b43d0.png)
- ![Flagbd_screenshot3](https://user-images.githubusercontent.com/46265909/131553839-28bfda7c-201d-41e0-b3fe-cbff772ed870.png)
- ![Flagbd_screenshot4](https://user-images.githubusercontent.com/46265909/132120014-07166d79-69a9-40c1-b4b8-92066a10696c.png)
- ![Flagbd_screenshot5](https://user-images.githubusercontent.com/46265909/132130878-d9cd9ccf-7982-4774-bc8f-7769d54be42c.png)
- ![Flagbd_screenshot6](https://user-images.githubusercontent.com/46265909/132687102-d2f5b0eb-aa66-4068-8937-b6664b548b9f.png)
- ![Flagbd_screenshot7](https://user-images.githubusercontent.com/46265909/133128571-96c19cc6-3151-4c36-b20d-a59346d62cfd.png)
- ![Flagbd_screemshot8](https://user-images.githubusercontent.com/46265909/137792438-33cdc10f-4f60-4dfc-96fd-dfa811ce1367.png)
- ![Flagbd_06](https://user-images.githubusercontent.com/46265909/152789218-f9727f4a-5a24-4f82-a9d5-cb98977c3b16.png)
-
