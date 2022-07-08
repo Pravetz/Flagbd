@@ -1,6 +1,7 @@
 #include <TGUI/TGUI.hpp>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <stdlib.h>
 #include <fstream>
 #include <string>
@@ -29,6 +30,7 @@ std::string save_file_path;
 std::string file_extension;
 int added_elements = 0;
 int active_elements = 0;
+int remembered_elements = 0;
 int store_id = 0;
 int wrapper_y = 36;
 float zoom_value=1;
@@ -190,11 +192,72 @@ void ptr_buffer(int l){
 		selected_e_name->setText("Selected id: "+ std::to_string(store_id));
 	}
 
+void find_previous_element(){
+	for(int i=0; i<store_id; i++){
+		if(!elements[i].type.empty())
+			remembered_elements = i;
+	}
+	std::cout<<"[i] remembered id: "<<remembered_elements<<std::endl;
+}
+
+void find_next_element(){
+	int stop = 0;
+	for(int i=0; i<MAX_ELEMENTS; i++){
+		if(!elements[i].type.empty() && i > store_id && stop != 1){
+			remembered_elements = i;
+			stop = 1;
+		}
+	}
+	std::cout<<"[i] remembered id: "<<remembered_elements<<std::endl;
+}
+
 void element_alloc(){
 	for(int i=0; i<MAX_ELEMENTS; i++){
-		if(!elements[i].path.empty())
+		if(!elements[i].type.empty())
 			active_elements = i;
 	}
+}
+
+void mv_element_up(){
+	if(store_id>1){
+		find_previous_element();
+		std::swap(elements[store_id], elements[remembered_elements]);
+		if(elements[store_id].type == "heraldry"){
+			buttons_elements[store_id]->setImage(elements[store_id].path.c_str());
+		}
+		else{
+			buttons_elements[store_id]->setImage("assets/flagbuilder/gui/text_icon.png");
+		}
+		if(elements[remembered_elements].type == "heraldry"){
+			buttons_elements[remembered_elements]->setImage(elements[remembered_elements].path.c_str());
+		}
+		else{
+			buttons_elements[remembered_elements]->setImage("assets/flagbuilder/gui/text_icon.png");
+		}
+		store_id = remembered_elements;
+	}
+}
+
+void mv_element_down(){
+	element_alloc();
+	if(store_id < MAX_ELEMENTS && store_id < active_elements){
+		find_next_element();
+		std::swap(elements[store_id], elements[remembered_elements]);
+		if(elements[store_id].type == "heraldry"){
+			buttons_elements[store_id]->setImage(elements[store_id].path.c_str());
+		}
+		else{
+			buttons_elements[store_id]->setImage("assets/flagbuilder/gui/text_icon.png");
+		}
+		if(elements[remembered_elements].type == "heraldry"){
+			buttons_elements[remembered_elements]->setImage(elements[remembered_elements].path.c_str());
+		}
+		else{
+			buttons_elements[remembered_elements]->setImage("assets/flagbuilder/gui/text_icon.png");
+		}
+		store_id = remembered_elements;
+	}
+	
 }
 
 void create_element_button(std::string p){
@@ -376,7 +439,7 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "0.7\n";
+		_cdata << "0.8\n";
 		_cdata << "31\n";
 		_cdata << "512\n";
 		_cdata << "assets/elements/circle.png\n";
@@ -425,6 +488,22 @@ void data_load_save()
 		}
 		_data.close();
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
+	}
+	//update cfg
+	if(FBD_VERSION != "0.8"){
+		FBD_VERSION = "0.8";
+		
+		std::ofstream _udata;
+		_udata.open("assets/flagbuilder/flagbd.cfg");
+		
+		_udata << FBD_VERSION << "\n";
+		_udata << NUM_OF_ELEMENTS << "\n";
+		_udata << MAX_ELEMENTS << "\n";
+		for(int i=0; i<NUM_OF_ELEMENTS; i++){
+			_udata << saved_tx_paths[i].path+"\n";
+		}
+		_udata.close();
+		std::cout<<"[^] Updated .cfg file"<<std::endl;
 	}
 	
 }
@@ -696,9 +775,15 @@ int main()
 	rdbutton_font_u->onCheck([&](){ elements[store_id].element_text.setStyle(sf::Text::Underlined); });
 	rdbutton_font_st->onCheck([&](){ elements[store_id].element_text.setStyle(sf::Text::StrikeThrough); });
 	
-	tgui::BitmapButton::Ptr del_element_button = tgui::BitmapButton::create();
+	auto del_element_button = tgui::BitmapButton::create();
 	del_element_button->setSize("6%","5%");
 	del_element_button->setPosition("77%","0.65%");
+	auto element_mv_up_button = tgui::BitmapButton::create();
+	element_mv_up_button->setSize("6%","5%");
+	element_mv_up_button->setPosition("84%","0.65%");
+	auto element_mv_down_button = tgui::BitmapButton::create();
+	element_mv_down_button->setSize("6%","5%");
+	element_mv_down_button->setPosition("91%","0.65%");
 	
 	button_addtext->setSize("3%","4%");
 	button_addtext->setText("Aa");
@@ -755,6 +840,8 @@ int main()
 	tgui::BitmapButton::Ptr paste_position = tgui::BitmapButton::create();
 	
 	del_element_button->setImage("assets/flagbuilder/gui/delete_element_icon.png");
+	element_mv_up_button->setImage("assets/flagbuilder/gui/e_up_icon.png");
+	element_mv_down_button->setImage("assets/flagbuilder/gui/e_down_icon.png");
 	button_center_element->setImage("assets/flagbuilder/gui/icon_center_element.png");
 	copy_color->setImage("assets/flagbuilder/gui/copy_color_icon.png");
 	paste_color->setImage("assets/flagbuilder/gui/paste_color_icon.png");
@@ -777,6 +864,8 @@ int main()
 	
 	del_element_button->onPress([&](){ elements[store_id] = elements[0]; wrapper_layers->remove(buttons_elements[store_id]); added_elements--; wrapper_y -= 32; store_id = 0; active_elements = 0; std::cout<<added_elements<<" "<<wrapper_y<<std::endl; });
 	button_addtext->onPress(create_text);
+	element_mv_up_button->onPress(mv_element_up);
+	element_mv_down_button->onPress(mv_element_down);
 	
 	button_center_element->onPress([&](){ elements[store_id].pos_x = f_x/2; elements[store_id].pos_y = f_y/2; });
 	copy_color->onPress([&](){ saved_r = elements[store_id].r; saved_g = elements[store_id].g; saved_b = elements[store_id].b; });
@@ -884,6 +973,8 @@ int main()
 	label_scale_y->setPosition("5%","41%");
 	
 	properties_panel->add(del_element_button);
+	properties_panel->add(element_mv_up_button);
+	properties_panel->add(element_mv_down_button);
 	properties_panel->add(label_r);
 	properties_panel->add(label_g);
 	properties_panel->add(label_b);
@@ -1079,6 +1170,16 @@ int main()
 			if(elements[store_id].type == "heraldry") { label_rotated->setText("("+std::to_string(elements[store_id].element_sprite.getRotation())+")"); }
 			else { label_rotated->setText("("+std::to_string(elements[store_id].element_text.getRotation())+")"); }
 			label_rgb->setText("("+std::to_string(elements[store_id].r)+";"+std::to_string(elements[store_id].g)+";"+std::to_string(elements[store_id].b)+")");
+			if(store_id>=1){
+				del_element_button->setEnabled(true);
+				element_mv_up_button->setEnabled(true);
+				element_mv_down_button->setEnabled(true);
+			}
+			else{
+				del_element_button->setEnabled(false);
+				element_mv_up_button->setEnabled(false);
+				element_mv_down_button->setEnabled(false);
+			}
 		}
 		else{
 			menu_file_primary->setMenuItemEnabled({"File", "Save..."}, false);
