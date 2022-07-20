@@ -372,7 +372,8 @@ void open_file()
 		_save >> added_elements;
 		for(int i=1; i<MAX_ELEMENTS; i++){
 			_save >> elements[i].type;
-			_save >> elements[i].path;
+			_save.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::getline(_save, elements[i].path);
 			_save >> elements[i].r;
 			_save >> elements[i].g;
 			_save >> elements[i].b;
@@ -427,8 +428,9 @@ void data_load_save()
 		elements.resize(MAX_ELEMENTS);
 		saved_tx_paths.resize(NUM_OF_ELEMENTS);
 		buttons_elements.resize(MAX_ELEMENTS);
+		_data.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
-			_data >> saved_tx_paths[i].path;
+			std::getline(_data, saved_tx_paths[i].path);
 		}
 		_data.close();
 		std::cout<<"[^] Successfully opened existing .cfg file"<<std::endl;
@@ -439,7 +441,7 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "0.8\n";
+		_cdata << "0.8.1\n";
 		_cdata << "31\n";
 		_cdata << "512\n";
 		_cdata << "assets/elements/circle.png\n";
@@ -483,15 +485,16 @@ void data_load_save()
 		elements.resize(MAX_ELEMENTS);
 		saved_tx_paths.resize(NUM_OF_ELEMENTS);
 		buttons_elements.resize(MAX_ELEMENTS);
+		_data.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
-			_data >> saved_tx_paths[i].path;
+			std::getline(_data, saved_tx_paths[i].path);
 		}
 		_data.close();
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
 	}
 	//update cfg
-	if(FBD_VERSION != "0.8"){
-		FBD_VERSION = "0.8";
+	if(FBD_VERSION != "0.8.1"){
+		FBD_VERSION = "0.8.1";
 		
 		std::ofstream _udata;
 		_udata.open("assets/flagbuilder/flagbd.cfg");
