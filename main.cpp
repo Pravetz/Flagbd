@@ -441,7 +441,7 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "0.8.1\n";
+		_cdata << "0.9\n";
 		_cdata << "31\n";
 		_cdata << "512\n";
 		_cdata << "assets/elements/circle.png\n";
@@ -493,8 +493,8 @@ void data_load_save()
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
 	}
 	//update cfg
-	if(FBD_VERSION != "0.8.1"){
-		FBD_VERSION = "0.8.1";
+	if(FBD_VERSION != "0.9"){
+		FBD_VERSION = "0.9";
 		
 		std::ofstream _udata;
 		_udata.open("assets/flagbuilder/flagbd.cfg");
@@ -559,6 +559,7 @@ int main()
 	auto window_exportfile = tgui::ChildWindow::create();
 	auto window_savefile = tgui::ChildWindow::create();
 	auto window_openfile = tgui::ChildWindow::create();
+	auto window_addheraldry = tgui::ChildWindow::create();
 	
 	auto button_exportfile = tgui::Button::create();
 	
@@ -571,13 +572,16 @@ int main()
 	auto l_path = tgui::Label::create();
 	auto l_spath = tgui::Label::create();
 	auto l_opath = tgui::Label::create();
+	auto l_hpath = tgui::Label::create();
 	auto ebox_path = tgui::EditBox::create();
 	auto ebox_spath = tgui::EditBox::create();
 	auto ebox_opath = tgui::EditBox::create();
+	auto ebox_hpath = tgui::EditBox::create();
 	
 	auto button_createfile = tgui::Button::create();
 	auto button_savefile = tgui::Button::create();
 	auto button_loadfile = tgui::Button::create();
+	auto cw_button_addheraldry = tgui::Button::create();
 	
 	//int file_width, file_height;
 	auto filew_input = tgui::EditBox::create();
@@ -630,6 +634,10 @@ int main()
 	window_openfile->setTitle("Open file...");
 	window_openfile->setResizable(false);
 	
+	window_addheraldry->setSize("30%", "30%");
+	window_addheraldry->setTitle("Add heraldry...");
+	window_addheraldry->setResizable(false);
+	
 	wcf_label_w->setSize("22%","45%");
 	wcf_label_h->setSize("25%","45%"); 
 	wcf_label_w->setPosition("2%","1%");
@@ -666,6 +674,9 @@ int main()
 	l_opath->setSize("32%","10%");
 	l_opath->setPosition("5%","15%");
 	l_opath->setText("Path(w/ filename):");
+	l_hpath->setText("Path(w/ filename):");
+	l_hpath->setSize("32%","10%");
+	l_hpath->setPosition("5%","15%");
 	
 	ebox_path->setSize("56%","10%");
 	ebox_path->setPosition("35%","15%");
@@ -676,6 +687,9 @@ int main()
 	ebox_opath->setSize("56%","10%");
 	ebox_opath->setPosition("35%","15%");
 	ebox_opath->setText("flag.fbds");
+	ebox_hpath->setSize("56%","10%");
+	ebox_hpath->setPosition("35%","15%");
+	ebox_hpath->setText("");
 	
 	rdbutton_png->setSize("6%","10%");
 	rdbutton_jpg->setSize("6%","10%");
@@ -709,6 +723,10 @@ int main()
 	button_loadfile->setText("Open");
 	button_loadfile->setPosition("75%","73%");
 	
+	cw_button_addheraldry->setSize("25%","25%");
+	cw_button_addheraldry->setText("Add");
+	cw_button_addheraldry->setPosition("75%","73%");
+	
 	logo_sprite->setPosition("25%",0);
 	l_about->setSize("100%", "35%");
 	l_about->setPosition(0,"34%");
@@ -740,6 +758,10 @@ int main()
 	window_openfile->add(ebox_opath);
 	window_openfile->add(button_loadfile);
 	
+	window_addheraldry->add(l_hpath);
+	window_addheraldry->add(ebox_hpath);
+	window_addheraldry->add(cw_button_addheraldry);
+	
 	auto panel_heraldry = tgui::ScrollablePanel::create();
 	auto wrapper_heraldry = tgui::HorizontalWrap::create();
 	tgui::BitmapButton::Ptr buttons_heraldry[NUM_OF_ELEMENTS];
@@ -750,6 +772,7 @@ int main()
 	auto layer_panel = tgui::ScrollablePanel::create();
 	
 	auto button_addtext = tgui::Button::create();
+	auto button_addheraldry = tgui::BitmapButton::create();
 	
 	auto label_font_path = tgui::Label::create();
 	auto label_str_text = tgui::Label::create();
@@ -791,6 +814,10 @@ int main()
 	button_addtext->setSize("3%","4%");
 	button_addtext->setText("Aa");
 	button_addtext->setPosition(0,"46%");
+	
+	button_addheraldry->setSize("3%","4%");
+	button_addheraldry->setImage("assets/flagbuilder/gui/icon_add_heraldry.png");
+	button_addheraldry->setPosition("3%","46%");
 	
 	edit_panel->setPosition(0, "2.6%");
 	edit_panel->setSize("20%", "43%");
@@ -867,6 +894,7 @@ int main()
 	
 	del_element_button->onPress([&](){ elements[store_id] = elements[0]; wrapper_layers->remove(buttons_elements[store_id]); added_elements--; wrapper_y -= 32; store_id = 0; active_elements = 0; std::cout<<added_elements<<" "<<wrapper_y<<std::endl; });
 	button_addtext->onPress(create_text);
+	button_addheraldry->onPress([&]() {gui.add(window_addheraldry);});
 	element_mv_up_button->onPress(mv_element_up);
 	element_mv_down_button->onPress(mv_element_down);
 	
@@ -1065,6 +1093,7 @@ int main()
 		gui.add(properties_panel); 
 		gui.add(layer_panel); 
 		gui.add(button_addtext);
+		gui.add(button_addheraldry);
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
 			buttons_heraldry[i] = tgui::BitmapButton::create();
 			buttons_heraldry[i]->setSize("13%",36);
@@ -1092,6 +1121,7 @@ int main()
 		gui.add(properties_panel); 
 		gui.add(layer_panel); 
 		gui.add(button_addtext);
+		gui.add(button_addheraldry);
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
 			buttons_heraldry[i] = tgui::BitmapButton::create();
 			buttons_heraldry[i]->setSize("13%",36);
@@ -1126,8 +1156,46 @@ int main()
 		gui.remove(properties_panel); 
 		gui.remove(layer_panel); 
 		gui.remove(button_addtext);
+		gui.remove(button_addheraldry);
 		window.clear(sf::Color(55,55,55));
 		FILE_OPEN = false;
+	});
+	
+	cw_button_addheraldry->onPress([&](){
+		sf::Texture validate_texture;
+		
+		tgui::String filepath = ebox_hpath->getText();
+		std::string load_heraldry_path = filepath.toStdString();
+		
+		if(validate_texture.loadFromFile(load_heraldry_path.c_str())){
+			NUM_OF_ELEMENTS++;
+			//std::cout<<NUM_OF_ELEMENTS<<std::endl;		//for debugging
+			saved_tx_paths.resize(NUM_OF_ELEMENTS);
+			saved_tx_paths[NUM_OF_ELEMENTS-1].path = load_heraldry_path;
+			//std::cout<<saved_tx_paths[NUM_OF_ELEMENTS-1].path<<std::endl;		//for debugging
+			//add buttons
+			buttons_heraldry[NUM_OF_ELEMENTS-1] = tgui::BitmapButton::create();
+			buttons_heraldry[NUM_OF_ELEMENTS-1]->setSize("13%",36);
+			buttons_heraldry[NUM_OF_ELEMENTS-1]->setImage(saved_tx_paths[NUM_OF_ELEMENTS-1].path.c_str());
+			buttons_heraldry[NUM_OF_ELEMENTS-1]->setImageScaling(0.25);
+			wrapper_heraldry->add(buttons_heraldry[NUM_OF_ELEMENTS-1]);
+			buttons_heraldry[NUM_OF_ELEMENTS-1]->onPress(&create_element, saved_tx_paths[NUM_OF_ELEMENTS-1].path.c_str());
+			
+			// update flagbd.cfg
+			std::ofstream _udata;
+			_udata.open("assets/flagbuilder/flagbd.cfg");
+			
+			_udata << FBD_VERSION << "\n";
+			_udata << NUM_OF_ELEMENTS << "\n";
+			_udata << MAX_ELEMENTS << "\n";
+			for(int i=0; i<NUM_OF_ELEMENTS; i++){
+				_udata << saved_tx_paths[i].path+"\n";
+			}
+			_udata.close();
+			std::cout<<"[^] Updated .cfg file"<<std::endl;
+			
+			gui.remove(window_addheraldry);
+		}
 	});
 	
 	while (window.isOpen())
