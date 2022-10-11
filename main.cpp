@@ -655,10 +655,6 @@ int main()
 	auto window_openfile = tgui::FileDialog::create();
 	auto window_addheraldry = tgui::FileDialog::create();
 	
-	auto l_hpath = tgui::Label::create();
-	auto ebox_path = tgui::EditBox::create();
-	auto ebox_hpath = tgui::EditBox::create();
-	
 	auto button_createfile = tgui::Button::create();
 	auto cw_button_addheraldry = tgui::Button::create();
 	
@@ -762,17 +758,6 @@ int main()
 	filew_input->setText("300");
 	fileh_input->setText("200");
 	
-	l_hpath->setText("Path(w/ filename):");
-	l_hpath->setSize("32%","10%");
-	l_hpath->setPosition("5%","15%");
-	
-	ebox_path->setSize("56%","10%");
-	ebox_path->setPosition("35%","15%");
-	ebox_path->setText("flag");
-	ebox_hpath->setSize("56%","10%");
-	ebox_hpath->setPosition("35%","15%");
-	ebox_hpath->setText("");
-	
 	window_exportfile->onFileSelect([&]{
 		if(!window_exportfile->getSelectedPaths().empty()){
 			tgui::String filepath = window_exportfile->getSelectedPaths()[0].asString();
@@ -805,10 +790,6 @@ int main()
 	window_createfile->add(filew_input);
 	window_createfile->add(fileh_input);
 	window_createfile->add(button_createfile);
-	
-	//window_addheraldry->add(l_hpath);
-	//window_addheraldry->add(ebox_hpath);
-	//window_addheraldry->add(cw_button_addheraldry);
 	
 	auto panel_heraldry = tgui::ScrollablePanel::create();
 	auto wrapper_heraldry = tgui::HorizontalWrap::create();
