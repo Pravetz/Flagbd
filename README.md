@@ -26,9 +26,12 @@ C++/TGUI/SFML program for creating flags.
  The structure of the config file is simple: 
  ```
  1. FLAGBD VERSION
- 2. NUMBER OF HERALDRY
- 3. MAXIMUM NUMBER OF ELEMENTS FLAGBD CAN DISPLAY
- 4+: TEXTURE PATHS(assets/elements/...) path count is equal to the number of heraldry
+ 2. WINDOW WIDTH
+ 3.	WINDOW HEIGHT
+ 4.	GUI THEME
+ 5. NUMBER OF HERALDRY
+ 6. MAXIMUM NUMBER OF ELEMENTS FLAGBD CAN DISPLAY
+ 7+: TEXTURE PATHS(assets/elements/...) path count is equal to the number of heraldry
  ```
  How to create text elements in Flagbd:
  1. Put the font in assets/elements/ directory (Fonts should be in the working directory, otherwise Flagbd most likely wont create the font face)

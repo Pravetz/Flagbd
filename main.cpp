@@ -6,19 +6,23 @@
 #include <fstream>
 #include <string>
 
-int x,y;
 int f_x, f_y;
-
 ////////////////////////// FLAGBD VARIABLES //////////////////////////
 //	values are loaded from flagbd.cfg
-//			MEANING OF VARIABLES:
+//						MEANING OF VARIABLES:
 //	FBD_VERSION = version of FlagBuilder
+//	x, y = screen width and height
+//	FBD_THEME = GUI theme path. FlagBuilder Uses TGUI themes, to change
+//	the default theme, download theme .txt file and a .png file with element atlas
+//	(see "Black.txt" and "Black.png" in assets/flagbuilder/gui)
 //	NUM_OF_ELEMENTS = number of elements to load from assets/elements,
 //	write a path to new elements in the config when you increase the value
 //	MAX_ELEMENTS = number of elements that can be drawn in the same time,
 //	Flagbd will most probably crash when trying to go over this value
 //////////////////////////////////////////////////////////////////////
 std::string FBD_VERSION;
+int x=0,y=0;
+std::string FBD_THEME;
 int NUM_OF_ELEMENTS;
 int MAX_ELEMENTS;
 //////////////////////////////////////////////////////////////////////
@@ -27,7 +31,6 @@ bool FILE_OPEN = false;
 bool smooth_enabled = false;
 std::string save_file_path;
 
-std::string file_extension;
 int added_elements = 0;
 int active_elements = 0;
 int remembered_elements = 0;
@@ -414,6 +417,87 @@ void open_file()
 	
 }
 
+void FBD_SET_DEF_DISPLAY()
+{
+	//sets default width and height on the first start
+	//writes path to .cfg for FBD_VERSION before 1.0, so data_load_save() won't break it
+	//values will be changed from .cfg onwards
+	x = sf::VideoMode::getDesktopMode().width;
+	y = sf::VideoMode::getDesktopMode().height-64;
+	
+	std::ifstream _data;
+	_data.open("assets/flagbuilder/flagbd.cfg");
+	
+	if(_data){
+		_data >> FBD_VERSION;
+		_data >> NUM_OF_ELEMENTS;
+		_data >> MAX_ELEMENTS;
+		elements.resize(MAX_ELEMENTS);
+		saved_tx_paths.resize(NUM_OF_ELEMENTS);
+		buttons_elements.resize(MAX_ELEMENTS);
+		_data.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		for(int i=0; i<NUM_OF_ELEMENTS; i++){
+			std::getline(_data, saved_tx_paths[i].path);
+		}
+		if(FBD_VERSION != "1.0"){
+			std::ofstream _udata;
+			_udata.open("assets/flagbuilder/flagbd.cfg");
+			
+			_udata << FBD_VERSION << "\n";
+			_udata << x << "\n";
+			_udata << y << "\n";
+			_udata << NUM_OF_ELEMENTS << "\n";
+			_udata << MAX_ELEMENTS << "\n";
+			for(int i=0; i<NUM_OF_ELEMENTS; i++){
+				_udata << saved_tx_paths[i].path+"\n";
+			}
+			_udata.close();
+		}
+		_data.close();
+	}
+}
+
+void FBD_SET_DEF_THEME()
+{
+	//sets default theme on the first start
+	//writes path to .cfg for FBD_VERSION before 1.0, so data_load_save() won't break it
+	//theme path can be changed in .cfg file later
+	FBD_THEME = "assets/flagbuilder/gui/Black.txt";
+	
+	std::ifstream _data;
+	_data.open("assets/flagbuilder/flagbd.cfg");
+	if(_data){
+		_data >> FBD_VERSION;
+		_data >> x;
+		_data >> y;
+		_data >> NUM_OF_ELEMENTS;
+		_data >> MAX_ELEMENTS;
+		elements.resize(MAX_ELEMENTS);
+		saved_tx_paths.resize(NUM_OF_ELEMENTS);
+		buttons_elements.resize(MAX_ELEMENTS);
+		_data.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		for(int i=0; i<NUM_OF_ELEMENTS; i++){
+			std::getline(_data, saved_tx_paths[i].path);
+		}
+		if(FBD_VERSION != "1.0"){
+			std::ofstream _udata;
+			_udata.open("assets/flagbuilder/flagbd.cfg");
+			
+			_udata << FBD_VERSION << "\n";
+			_udata << x << "\n";
+			_udata << y << "\n";
+			_udata << FBD_THEME << "\n";
+			_udata << NUM_OF_ELEMENTS << "\n";
+			_udata << MAX_ELEMENTS << "\n";
+			for(int i=0; i<NUM_OF_ELEMENTS; i++){
+				_udata << saved_tx_paths[i].path+"\n";
+			}
+			_udata.close();
+		}
+		_data.close();
+	}
+}
+
 void data_load_save()
 {
 	std::ifstream _data;
@@ -423,6 +507,9 @@ void data_load_save()
 	_data.open("assets/flagbuilder/flagbd.cfg");
 	if(_data){
 		_data >> FBD_VERSION;
+		_data >> x;
+		_data >> y;
+		_data >> FBD_THEME;
 		_data >> NUM_OF_ELEMENTS;
 		_data >> MAX_ELEMENTS;
 		elements.resize(MAX_ELEMENTS);
@@ -441,7 +528,10 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "0.9\n";
+		_cdata << "1.0\n";
+		_cdata << x << "\n";
+		_cdata << y << "\n";
+		_cdata << FBD_THEME << "\n";
 		_cdata << "31\n";
 		_cdata << "512\n";
 		_cdata << "assets/elements/circle.png\n";
@@ -480,6 +570,9 @@ void data_load_save()
 		
 		_data.open("assets/flagbuilder/flagbd.cfg");
 		_data >> FBD_VERSION;
+		_data >> x;
+		_data >> y;
+		_data >> FBD_THEME;
 		_data >> NUM_OF_ELEMENTS;
 		_data >> MAX_ELEMENTS;
 		elements.resize(MAX_ELEMENTS);
@@ -493,13 +586,16 @@ void data_load_save()
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
 	}
 	//update cfg
-	if(FBD_VERSION != "0.9"){
-		FBD_VERSION = "0.9";
+	if(FBD_VERSION != "1.0"){
+		FBD_VERSION = "1.0";
 		
 		std::ofstream _udata;
 		_udata.open("assets/flagbuilder/flagbd.cfg");
 		
 		_udata << FBD_VERSION << "\n";
+		_udata << x << "\n";
+		_udata << y << "\n";
+		_udata << FBD_THEME << "\n";
 		_udata << NUM_OF_ELEMENTS << "\n";
 		_udata << MAX_ELEMENTS << "\n";
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
@@ -508,26 +604,24 @@ void data_load_save()
 		_udata.close();
 		std::cout<<"[^] Updated .cfg file"<<std::endl;
 	}
-	
 }
 
 int main()
 {
+	FBD_SET_DEF_DISPLAY();
+	FBD_SET_DEF_THEME();
 	data_load_save();
-	sf::RenderWindow window{{sf::VideoMode::getDesktopMode().width, sf::VideoMode::getDesktopMode().height-64}, "FlagBuilder "+FBD_VERSION};
+	sf::RenderWindow window{{(unsigned int) x, (unsigned int) y}, "FlagBuilder "+FBD_VERSION};
 	gui.setTarget(window);
-	tgui::Theme::setDefault("assets/flagbuilder/gui/Black.txt");
+	tgui::Theme::setDefault(FBD_THEME.c_str());
 	
-	tgui::Theme theme_main("assets/flagbuilder/gui/Black.txt");
+	tgui::Theme theme_main(FBD_THEME.c_str());
 	
 	rdbutton_font_r->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_b->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_i->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_u->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_st->setRenderer(theme_main.getRenderer("RadioButton"));
-	
-	x = sf::VideoMode::getDesktopMode().width;
-	y = sf::VideoMode::getDesktopMode().height-64;
 	
 	window.setFramerateLimit(60);
 	//////////////////////////////////////////////
@@ -556,31 +650,16 @@ int main()
 	auto l_about = tgui::TextArea::create();
 	
 	auto window_createfile = tgui::ChildWindow::create();
-	auto window_exportfile = tgui::ChildWindow::create();
-	auto window_savefile = tgui::ChildWindow::create();
-	auto window_openfile = tgui::ChildWindow::create();
-	auto window_addheraldry = tgui::ChildWindow::create();
+	auto window_exportfile = tgui::FileDialog::create("Export file...", "Export");
+	auto window_savefile = tgui::FileDialog::create("Save file...", "Save");
+	auto window_openfile = tgui::FileDialog::create();
+	auto window_addheraldry = tgui::FileDialog::create();
 	
-	auto button_exportfile = tgui::Button::create();
-	
-	auto rdbutton_png = tgui::RadioButton::create();
-	auto rdbutton_tga = tgui::RadioButton::create();
-	auto rdbutton_jpg = tgui::RadioButton::create();
-	auto rdbutton_bmp = tgui::RadioButton::create();
-	
-	auto l_extension = tgui::Label::create();
-	auto l_path = tgui::Label::create();
-	auto l_spath = tgui::Label::create();
-	auto l_opath = tgui::Label::create();
 	auto l_hpath = tgui::Label::create();
 	auto ebox_path = tgui::EditBox::create();
-	auto ebox_spath = tgui::EditBox::create();
-	auto ebox_opath = tgui::EditBox::create();
 	auto ebox_hpath = tgui::EditBox::create();
 	
 	auto button_createfile = tgui::Button::create();
-	auto button_savefile = tgui::Button::create();
-	auto button_loadfile = tgui::Button::create();
 	auto cw_button_addheraldry = tgui::Button::create();
 	
 	//int file_width, file_height;
@@ -623,20 +702,41 @@ int main()
 	window_createfile->setResizable(false);
 	
 	window_exportfile->setSize("30%", "30%");
-	window_exportfile->setTitle("Export file...");
-	window_exportfile->setResizable(false);
+	window_exportfile->setResizable(true);
+	window_exportfile->setFileMustExist(false);
+	window_exportfile->setFileTypeFilters({
+		{"Portable Network Graphics", {"*.png"}},
+		{"JPEG", {"*.jpg", "*.jpeg"}},
+		{"Truevision TGA", {"*.tga"}},
+		{"Bitmap image file", {"*.bmp"}},
+	});
 	
 	window_savefile->setSize("30%", "30%");
-	window_savefile->setTitle("Save file...");
-	window_savefile->setResizable(false);
+	window_savefile->setResizable(true);
+	window_savefile->setFileMustExist(false);
+	window_savefile->setFileTypeFilters({
+		{"FlagBuilder Save", {"*.fbds"}},
+	});
 	
 	window_openfile->setSize("30%", "30%");
 	window_openfile->setTitle("Open file...");
-	window_openfile->setResizable(false);
+	window_openfile->setResizable(true);
+	window_openfile->setMultiSelect(false);
+	window_openfile->setFileTypeFilters({
+		{"FlagBuilder Save", {"*.fbds"}},
+	});
+	window_openfile->setFileMustExist(true);
 	
 	window_addheraldry->setSize("30%", "30%");
-	window_addheraldry->setTitle("Add heraldry...");
-	window_addheraldry->setResizable(false);
+	window_addheraldry->setResizable(true);
+	window_addheraldry->setFileTypeFilters({
+		{"Portable Network Graphics", {"*.png"}},
+		{"JPEG", {"*.jpg", "*.jpeg"}},
+		{"Truevision TGA", {"*.tga"}},
+		{"Bitmap image file", {"*.bmp"}},
+		{"All files", {"*.png", "*.jpg", "*.jpeg", "*.tga", "*.bmp"}},
+	});
+	window_addheraldry->setFileMustExist(true);
 	
 	wcf_label_w->setSize("22%","45%");
 	wcf_label_h->setSize("25%","45%"); 
@@ -662,18 +762,6 @@ int main()
 	filew_input->setText("300");
 	fileh_input->setText("200");
 	
-	l_extension->setSize("20%","10%");
-	l_extension->setPosition("5%","2%");
-	l_extension->setText("Extension:");
-	l_path->setSize("32%","10%");
-	l_path->setPosition("5%","15%");
-	l_path->setText("Path(w/ filename):");
-	l_spath->setSize("32%","10%");
-	l_spath->setPosition("5%","15%");
-	l_spath->setText("Path(w/ filename):");
-	l_opath->setSize("32%","10%");
-	l_opath->setPosition("5%","15%");
-	l_opath->setText("Path(w/ filename):");
 	l_hpath->setText("Path(w/ filename):");
 	l_hpath->setSize("32%","10%");
 	l_hpath->setPosition("5%","15%");
@@ -681,47 +769,24 @@ int main()
 	ebox_path->setSize("56%","10%");
 	ebox_path->setPosition("35%","15%");
 	ebox_path->setText("flag");
-	ebox_spath->setSize("56%","10%");
-	ebox_spath->setPosition("35%","15%");
-	ebox_spath->setText("flag");
-	ebox_opath->setSize("56%","10%");
-	ebox_opath->setPosition("35%","15%");
-	ebox_opath->setText("flag.fbds");
 	ebox_hpath->setSize("56%","10%");
 	ebox_hpath->setPosition("35%","15%");
 	ebox_hpath->setText("");
 	
-	rdbutton_png->setSize("6%","10%");
-	rdbutton_jpg->setSize("6%","10%");
-	rdbutton_tga->setSize("6%","10%");
-	rdbutton_bmp->setSize("6%","10%");
-	rdbutton_png->setText(".png");
-	rdbutton_jpg->setText(".jpg");
-	rdbutton_tga->setText(".tga");
-	rdbutton_bmp->setText(".bmp");
-	rdbutton_png->setPosition("31%","2%");
-	rdbutton_jpg->setPosition("46%","2%");
-	rdbutton_tga->setPosition("60%","2%");
-	rdbutton_bmp->setPosition("74%","2%");
+	window_exportfile->onFileSelect([&]{
+		if(!window_exportfile->getSelectedPaths().empty()){
+			tgui::String filepath = window_exportfile->getSelectedPaths()[0].asString();
+			rendered_texture.getTexture()->copyToImage().saveToFile(filepath.toStdString()); 
+		}
+	});
 	
-	rdbutton_png->onCheck([&]{ file_extension = ".png"; });
-	rdbutton_jpg->onCheck([&]{ file_extension = ".jpg"; });
-	rdbutton_tga->onCheck([&]{ file_extension = ".tga"; });
-	rdbutton_bmp->onCheck([&]{ file_extension = ".bmp"; });
-	
-	button_exportfile->setSize("25%","25%");
-	button_exportfile->setText("Export");
-	button_exportfile->setPosition("75%","73%");
-	button_exportfile->onPress([&]{ tgui::String filepath = ebox_path->getText(); rendered_texture.getTexture()->copyToImage().saveToFile(filepath.toStdString()+file_extension); });
-	
-	button_savefile->setSize("25%","25%");
-	button_savefile->setText("Save");
-	button_savefile->setPosition("75%","73%");
-	button_savefile->onPress([&](){ tgui::String filepath = ebox_spath->getText(); save_file_path = filepath.toStdString()+".fbds"; save_file(); });
-	
-	button_loadfile->setSize("25%","25%");
-	button_loadfile->setText("Open");
-	button_loadfile->setPosition("75%","73%");
+	window_savefile->onFileSelect([&](){
+		if(!window_savefile->getSelectedPaths().empty()){
+		tgui::String filepath = window_savefile->getSelectedPaths()[0].asString();
+		save_file_path = filepath.toStdString()+".fbds"; 
+		save_file(); 
+		}
+	});
 	
 	cw_button_addheraldry->setSize("25%","25%");
 	cw_button_addheraldry->setText("Add");
@@ -741,26 +806,9 @@ int main()
 	window_createfile->add(fileh_input);
 	window_createfile->add(button_createfile);
 	
-	window_exportfile->add(l_extension);
-	window_exportfile->add(l_path);
-	window_exportfile->add(ebox_path);
-	window_exportfile->add(button_exportfile);
-	window_exportfile->add(rdbutton_png);
-	window_exportfile->add(rdbutton_jpg);
-	window_exportfile->add(rdbutton_tga);
-	window_exportfile->add(rdbutton_bmp);
-	
-	window_savefile->add(l_spath);
-	window_savefile->add(ebox_spath);
-	window_savefile->add(button_savefile);
-	
-	window_openfile->add(l_opath);
-	window_openfile->add(ebox_opath);
-	window_openfile->add(button_loadfile);
-	
-	window_addheraldry->add(l_hpath);
-	window_addheraldry->add(ebox_hpath);
-	window_addheraldry->add(cw_button_addheraldry);
+	//window_addheraldry->add(l_hpath);
+	//window_addheraldry->add(ebox_hpath);
+	//window_addheraldry->add(cw_button_addheraldry);
 	
 	auto panel_heraldry = tgui::ScrollablePanel::create();
 	auto wrapper_heraldry = tgui::HorizontalWrap::create();
@@ -1077,32 +1125,34 @@ int main()
 	layer_panel->add(wrapper_layers);
 	
 	zoom_slider->onValueChange([&]{ zoom_value = zoom_slider->getValue(); display_view.zoom(zoom_value); window.setView(display_view); std::cout<<"[i] zoom_value: "<<zoom_value<<std::endl; });
-	button_loadfile->onPress([&](){
-		tgui::String filepath = ebox_opath->getText();
-		save_file_path = filepath.toStdString();
-		open_file();
-		window.setView(display_view); 
-		tgui::String s_w = filew_input->getText();
-		tgui::String s_h = fileh_input->getText(); 
-		if(!texture.create(f_x, f_y)) 
-			{ return EXIT_FAILURE; } 
-		rendered_texture.setTexture(texture.getTexture(), true); 
-		rendered_texture.setOrigin(rendered_texture.getLocalBounds().width/2, 
-		rendered_texture.getLocalBounds().height/2); rendered_texture.setPosition(x/2,y/2); 
-		FILE_OPEN = true; gui.add(panel_heraldry); gui.add(edit_panel); 
-		gui.add(properties_panel); 
-		gui.add(layer_panel); 
-		gui.add(button_addtext);
-		gui.add(button_addheraldry);
-		for(int i=0; i<NUM_OF_ELEMENTS; i++){
-			buttons_heraldry[i] = tgui::BitmapButton::create();
-			buttons_heraldry[i]->setSize("13%",36);
-			buttons_heraldry[i]->setImage(saved_tx_paths[i].path.c_str());
-			buttons_heraldry[i]->setImageScaling(0.25);
-			wrapper_heraldry->add(buttons_heraldry[i]);
-			buttons_heraldry[i]->onPress(&create_element, saved_tx_paths[i].path.c_str());
-		
-			//std::cout<<"[i] Heraldry: "<< i <<std::endl; 					// for debugging
+	window_openfile->onFileSelect([&](){
+		if(!window_openfile->getSelectedPaths().empty()){
+			tgui::String filepath = window_openfile->getSelectedPaths()[0].asString();
+			save_file_path = filepath.toStdString();
+			open_file();
+			window.setView(display_view); 
+			tgui::String s_w = filew_input->getText();
+			tgui::String s_h = fileh_input->getText(); 
+			if(!texture.create(f_x, f_y)) 
+				{ return EXIT_FAILURE; } 
+			rendered_texture.setTexture(texture.getTexture(), true); 
+			rendered_texture.setOrigin(rendered_texture.getLocalBounds().width/2, 
+			rendered_texture.getLocalBounds().height/2); rendered_texture.setPosition(x/2,y/2); 
+			FILE_OPEN = true; gui.add(panel_heraldry); gui.add(edit_panel); 
+			gui.add(properties_panel); 
+			gui.add(layer_panel); 
+			gui.add(button_addtext);
+			gui.add(button_addheraldry);
+			for(int i=0; i<NUM_OF_ELEMENTS; i++){
+				buttons_heraldry[i] = tgui::BitmapButton::create();
+				buttons_heraldry[i]->setSize("13%",36);
+				buttons_heraldry[i]->setImage(saved_tx_paths[i].path.c_str());
+				buttons_heraldry[i]->setImageScaling(0.25);
+				wrapper_heraldry->add(buttons_heraldry[i]);
+				buttons_heraldry[i]->onPress(&create_element, saved_tx_paths[i].path.c_str());
+			
+				//std::cout<<"[i] Heraldry: "<< i <<std::endl; 					// for debugging
+			}
 		}
 		gui.remove(window_openfile);
 	});
@@ -1161,40 +1211,45 @@ int main()
 		FILE_OPEN = false;
 	});
 	
-	cw_button_addheraldry->onPress([&](){
-		sf::Texture validate_texture;
-		
-		tgui::String filepath = ebox_hpath->getText();
-		std::string load_heraldry_path = filepath.toStdString();
-		
-		if(validate_texture.loadFromFile(load_heraldry_path.c_str())){
-			NUM_OF_ELEMENTS++;
-			//std::cout<<NUM_OF_ELEMENTS<<std::endl;		//for debugging
-			saved_tx_paths.resize(NUM_OF_ELEMENTS);
-			saved_tx_paths[NUM_OF_ELEMENTS-1].path = load_heraldry_path;
-			//std::cout<<saved_tx_paths[NUM_OF_ELEMENTS-1].path<<std::endl;		//for debugging
-			//add buttons
-			buttons_heraldry[NUM_OF_ELEMENTS-1] = tgui::BitmapButton::create();
-			buttons_heraldry[NUM_OF_ELEMENTS-1]->setSize("13%",36);
-			buttons_heraldry[NUM_OF_ELEMENTS-1]->setImage(saved_tx_paths[NUM_OF_ELEMENTS-1].path.c_str());
-			buttons_heraldry[NUM_OF_ELEMENTS-1]->setImageScaling(0.25);
-			wrapper_heraldry->add(buttons_heraldry[NUM_OF_ELEMENTS-1]);
-			buttons_heraldry[NUM_OF_ELEMENTS-1]->onPress(&create_element, saved_tx_paths[NUM_OF_ELEMENTS-1].path.c_str());
+	window_addheraldry->onFileSelect([&](){
+		if(!window_addheraldry->getSelectedPaths().empty()){
+			sf::Texture validate_texture;
 			
-			// update flagbd.cfg
-			std::ofstream _udata;
-			_udata.open("assets/flagbuilder/flagbd.cfg");
+			tgui::String filepath = window_addheraldry->getSelectedPaths()[0].asString();
+			std::string load_heraldry_path = filepath.toStdString();
 			
-			_udata << FBD_VERSION << "\n";
-			_udata << NUM_OF_ELEMENTS << "\n";
-			_udata << MAX_ELEMENTS << "\n";
-			for(int i=0; i<NUM_OF_ELEMENTS; i++){
-				_udata << saved_tx_paths[i].path+"\n";
+			if(validate_texture.loadFromFile(load_heraldry_path.c_str())){
+				NUM_OF_ELEMENTS++;
+				//std::cout<<NUM_OF_ELEMENTS<<std::endl;		//for debugging
+				saved_tx_paths.resize(NUM_OF_ELEMENTS);
+				saved_tx_paths[NUM_OF_ELEMENTS-1].path = load_heraldry_path;
+				//std::cout<<saved_tx_paths[NUM_OF_ELEMENTS-1].path<<std::endl;		//for debugging
+				//add buttons
+				buttons_heraldry[NUM_OF_ELEMENTS-1] = tgui::BitmapButton::create();
+				buttons_heraldry[NUM_OF_ELEMENTS-1]->setSize("13%",36);
+				buttons_heraldry[NUM_OF_ELEMENTS-1]->setImage(saved_tx_paths[NUM_OF_ELEMENTS-1].path.c_str());
+				buttons_heraldry[NUM_OF_ELEMENTS-1]->setImageScaling(0.25);
+				wrapper_heraldry->add(buttons_heraldry[NUM_OF_ELEMENTS-1]);
+				buttons_heraldry[NUM_OF_ELEMENTS-1]->onPress(&create_element, saved_tx_paths[NUM_OF_ELEMENTS-1].path.c_str());
+				
+				// update flagbd.cfg
+				std::ofstream _udata;
+				_udata.open("assets/flagbuilder/flagbd.cfg");
+				
+				_udata << FBD_VERSION << "\n";
+				_udata << x << "\n";
+				_udata << y << "\n";
+				_udata << FBD_THEME << "\n";
+				_udata << NUM_OF_ELEMENTS << "\n";
+				_udata << MAX_ELEMENTS << "\n";
+				for(int i=0; i<NUM_OF_ELEMENTS; i++){
+					_udata << saved_tx_paths[i].path+"\n";
+				}
+				_udata.close();
+				std::cout<<"[^] Updated .cfg file"<<std::endl;
+				
+				gui.remove(window_addheraldry);
 			}
-			_udata.close();
-			std::cout<<"[^] Updated .cfg file"<<std::endl;
-			
-			gui.remove(window_addheraldry);
 		}
 	});
 	
@@ -1208,7 +1263,6 @@ int main()
 			if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 				window.close();
 		}
-		
 		if(FILE_OPEN){
 			menu_file_primary->setMenuItemEnabled({"File", "Save..."}, true);
 			menu_file_primary->setMenuItemEnabled({"File", "Export..."}, true);
