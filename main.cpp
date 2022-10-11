@@ -439,7 +439,7 @@ void FBD_SET_DEF_DISPLAY()
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
 			std::getline(_data, saved_tx_paths[i].path);
 		}
-		if(FBD_VERSION != "1.0"){
+		if(FBD_VERSION == "0.7" || FBD_VERSION == "0.8" || FBD_VERSION == "0.8.1" || FBD_VERSION == "0.9"){
 			std::ofstream _udata;
 			_udata.open("assets/flagbuilder/flagbd.cfg");
 			
@@ -479,7 +479,7 @@ void FBD_SET_DEF_THEME()
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
 			std::getline(_data, saved_tx_paths[i].path);
 		}
-		if(FBD_VERSION != "1.0"){
+		if(FBD_VERSION == "0.7" || FBD_VERSION == "0.8" || FBD_VERSION == "0.8.1" || FBD_VERSION == "0.9"){
 			std::ofstream _udata;
 			_udata.open("assets/flagbuilder/flagbd.cfg");
 			
@@ -528,7 +528,7 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "1.0\n";
+		_cdata << "1.0.1\n";
 		_cdata << x << "\n";
 		_cdata << y << "\n";
 		_cdata << FBD_THEME << "\n";
@@ -586,8 +586,8 @@ void data_load_save()
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
 	}
 	//update cfg
-	if(FBD_VERSION != "1.0"){
-		FBD_VERSION = "1.0";
+	if(FBD_VERSION != "1.0.1"){
+		FBD_VERSION = "1.0.1";
 		
 		std::ofstream _udata;
 		_udata.open("assets/flagbuilder/flagbd.cfg");
@@ -656,7 +656,6 @@ int main()
 	auto window_addheraldry = tgui::FileDialog::create();
 	
 	auto button_createfile = tgui::Button::create();
-	auto cw_button_addheraldry = tgui::Button::create();
 	
 	//int file_width, file_height;
 	auto filew_input = tgui::EditBox::create();
@@ -773,10 +772,6 @@ int main()
 		}
 	});
 	
-	cw_button_addheraldry->setSize("25%","25%");
-	cw_button_addheraldry->setText("Add");
-	cw_button_addheraldry->setPosition("75%","73%");
-	
 	logo_sprite->setPosition("25%",0);
 	l_about->setSize("100%", "35%");
 	l_about->setPosition(0,"34%");
@@ -793,7 +788,8 @@ int main()
 	
 	auto panel_heraldry = tgui::ScrollablePanel::create();
 	auto wrapper_heraldry = tgui::HorizontalWrap::create();
-	tgui::BitmapButton::Ptr buttons_heraldry[NUM_OF_ELEMENTS];
+	std::vector <tgui::BitmapButton::Ptr> buttons_heraldry;
+	buttons_heraldry.resize(NUM_OF_ELEMENTS);
 	
 	auto edit_panel = tgui::Panel::create();
 	auto wrapper_editb = tgui::HorizontalWrap::create();
@@ -1203,6 +1199,7 @@ int main()
 				NUM_OF_ELEMENTS++;
 				//std::cout<<NUM_OF_ELEMENTS<<std::endl;		//for debugging
 				saved_tx_paths.resize(NUM_OF_ELEMENTS);
+				buttons_heraldry.resize(NUM_OF_ELEMENTS);
 				saved_tx_paths[NUM_OF_ELEMENTS-1].path = load_heraldry_path;
 				//std::cout<<saved_tx_paths[NUM_OF_ELEMENTS-1].path<<std::endl;		//for debugging
 				//add buttons
