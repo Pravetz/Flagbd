@@ -188,7 +188,7 @@ void ptr_buffer(int l){
 		ebox_scale_x->onTextChange([&](){ tgui::String str_scale_x = ebox_scale_x->getText(); elements[store_id].scale_x = str_scale_x.toFloat(); });
 		ebox_scale_y->onTextChange([&](){ tgui::String str_scale_y = ebox_scale_y->getText(); elements[store_id].scale_y = str_scale_y.toFloat(); });
 		rotation->onValueChange([&](){ if(elements[store_id].type == "heraldry") { elements[store_id].element_sprite.setRotation(rotation->getValue()); } else { elements[store_id].element_text.setRotation(rotation->getValue()); } elements[store_id].e_rotation = rotation->getValue(); });
-		ebox_font_path->onRightMousePress([&](){ if(elements[store_id].type == "text") { tgui::String f_path = ebox_font_path->getText(); elements[store_id].path = f_path.toStdString(); if(!elements[store_id].element_font.loadFromFile(f_path.toStdString().c_str())){ std::cout<< "[x] Failed to load font."<<std::endl; } elements[store_id].element_text.setFont(elements[store_id].element_font); } });
+		ebox_font_path->onReturnKeyPress([&](){ if(elements[store_id].type == "text") { tgui::String f_path = ebox_font_path->getText(); elements[store_id].path = f_path.toStdString(); if(!elements[store_id].element_font.loadFromFile(f_path.toStdString().c_str())){ std::cout<< "[x] Failed to load font."<<std::endl; } elements[store_id].element_text.setFont(elements[store_id].element_font); } });
 		ebox_str_text->onTextChange([&](){ tgui::String text = ebox_str_text->getText(); elements[store_id].element_str_text = text.toStdString(); elements[store_id].element_text.setString(text.toWideString()); });
 		ebox_str_size->onTextChange([&](){ tgui::String size_str = ebox_str_size->getText(); elements[store_id].element_text_size = size_str.toInt(); elements[store_id].element_text.setCharacterSize(size_str.toInt()); });
 		
@@ -528,7 +528,7 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "1.0.1\n";
+		_cdata << "1.0.2\n";
 		_cdata << x << "\n";
 		_cdata << y << "\n";
 		_cdata << FBD_THEME << "\n";
@@ -586,8 +586,8 @@ void data_load_save()
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
 	}
 	//update cfg
-	if(FBD_VERSION != "1.0.1"){
-		FBD_VERSION = "1.0.1";
+	if(FBD_VERSION != "1.0.2"){
+		FBD_VERSION = "1.0.2";
 		
 		std::ofstream _udata;
 		_udata.open("assets/flagbuilder/flagbd.cfg");

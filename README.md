@@ -35,7 +35,7 @@ C++/TGUI/SFML program for creating flags.
  ```
  How to create text elements in Flagbd:
  1. Put the font in assets/elements/ directory (Fonts should be in the working directory, otherwise Flagbd most likely wont create the font face)
- 2. Create text element and write a path to the font in program, then right-click the font path to load it
+ 2. Create text element and write a path to the font in program, then press Enter to load it
 
 
  Element pictures are taken from Flaggen(https://github.com/Pravetz/sfml-flaggen)
