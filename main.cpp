@@ -15,6 +15,7 @@ int f_x, f_y;
 //	FBD_THEME = GUI theme path. FlagBuilder Uses TGUI themes, to change
 //	the default theme, download theme .txt file and a .png file with element atlas
 //	(see "Black.txt" and "Black.png" in assets/flagbuilder/gui)
+//	FBD_FPS_LIM = default FPS limit
 //	NUM_OF_ELEMENTS = number of elements to load from assets/elements,
 //	write a path to new elements in the config when you increase the value
 //	MAX_ELEMENTS = number of elements that can be drawn in the same time,
@@ -23,12 +24,14 @@ int f_x, f_y;
 std::string FBD_VERSION;
 int x=0,y=0;
 std::string FBD_THEME;
-int NUM_OF_ELEMENTS;
-int MAX_ELEMENTS;
+unsigned int FBD_FPS_LIM;
+unsigned int NUM_OF_ELEMENTS;
+unsigned int MAX_ELEMENTS;
 //////////////////////////////////////////////////////////////////////
 
 bool FILE_OPEN = false;
 bool smooth_enabled = false;
+bool block_inputs = false;
 std::string save_file_path;
 
 int added_elements = 0;
@@ -191,6 +194,21 @@ void ptr_buffer(int l){
 		ebox_font_path->onReturnKeyPress([&](){ if(elements[store_id].type == "text") { tgui::String f_path = ebox_font_path->getText(); elements[store_id].path = f_path.toStdString(); if(!elements[store_id].element_font.loadFromFile(f_path.toStdString().c_str())){ std::cout<< "[x] Failed to load font."<<std::endl; } elements[store_id].element_text.setFont(elements[store_id].element_font); } });
 		ebox_str_text->onTextChange([&](){ tgui::String text = ebox_str_text->getText(); elements[store_id].element_str_text = text.toStdString(); elements[store_id].element_text.setString(text.toWideString()); });
 		ebox_str_size->onTextChange([&](){ tgui::String size_str = ebox_str_size->getText(); elements[store_id].element_text_size = size_str.toInt(); elements[store_id].element_text.setCharacterSize(size_str.toInt()); });
+		
+		ebox_pos_x->onFocus([&](){ block_inputs = true; });
+		ebox_pos_x->onUnfocus([&](){ block_inputs = false; });
+		ebox_pos_y->onFocus([&](){ block_inputs = true; });
+		ebox_pos_y->onUnfocus([&](){ block_inputs = false; });
+		ebox_scale_x->onFocus([&](){ block_inputs = true; });
+		ebox_scale_x->onUnfocus([&](){ block_inputs = false; });
+		ebox_scale_y->onFocus([&](){ block_inputs = true; });
+		ebox_scale_y->onUnfocus([&](){ block_inputs = false; });
+		ebox_font_path->onFocus([&](){ block_inputs = true; });
+		ebox_font_path->onUnfocus([&](){ block_inputs = false; });
+		ebox_str_text->onFocus([&](){ block_inputs = true; });
+		ebox_str_text->onUnfocus([&](){ block_inputs = false; });
+		ebox_str_size->onFocus([&](){ block_inputs = true; });
+		ebox_str_size->onUnfocus([&](){ block_inputs = false; });
 		
 		selected_e_name->setText("Selected id: "+ std::to_string(store_id));
 	}
@@ -417,6 +435,49 @@ void open_file()
 	
 }
 
+void FBD_SET_DEF_FPS_LIM()
+{
+	//sets default FPS limit
+	//writes it to the flagbd.cfg if the version is before 1.1
+	//limit can be changed in config onwards
+	FBD_FPS_LIM = 60;
+	
+	std::ifstream _data;
+	_data.open("assets/flagbuilder/flagbd.cfg");
+	if(_data){
+		_data >> FBD_VERSION;
+		_data >> x;
+		_data >> y;
+		_data >> FBD_THEME;
+		_data >> NUM_OF_ELEMENTS;
+		_data >> MAX_ELEMENTS;
+		elements.resize(MAX_ELEMENTS);
+		saved_tx_paths.resize(NUM_OF_ELEMENTS);
+		buttons_elements.resize(MAX_ELEMENTS);
+		_data.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		for(int i=0; i<NUM_OF_ELEMENTS; i++){
+			std::getline(_data, saved_tx_paths[i].path);
+		}
+		if(FBD_VERSION == "0.7" || FBD_VERSION == "0.8" || FBD_VERSION == "0.8.1" || FBD_VERSION == "0.9" || FBD_VERSION == "1.0" || FBD_VERSION == "1.0.1" || FBD_VERSION == "1.0.2"){
+			std::ofstream _udata;
+			_udata.open("assets/flagbuilder/flagbd.cfg");
+			
+			_udata << FBD_VERSION << "\n";
+			_udata << x << "\n";
+			_udata << y << "\n";
+			_udata << FBD_THEME << "\n";
+			_udata << FBD_FPS_LIM <<"\n";
+			_udata << NUM_OF_ELEMENTS << "\n";
+			_udata << MAX_ELEMENTS << "\n";
+			for(int i=0; i<NUM_OF_ELEMENTS; i++){
+				_udata << saved_tx_paths[i].path+"\n";
+			}
+			_udata.close();
+		}
+		_data.close();
+	}
+}
+
 void FBD_SET_DEF_DISPLAY()
 {
 	//sets default width and height on the first start
@@ -510,6 +571,7 @@ void data_load_save()
 		_data >> x;
 		_data >> y;
 		_data >> FBD_THEME;
+		_data >> FBD_FPS_LIM;
 		_data >> NUM_OF_ELEMENTS;
 		_data >> MAX_ELEMENTS;
 		elements.resize(MAX_ELEMENTS);
@@ -528,10 +590,11 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "1.0.2\n";
+		_cdata << "1.1\n";
 		_cdata << x << "\n";
 		_cdata << y << "\n";
 		_cdata << FBD_THEME << "\n";
+		_cdata << FBD_FPS_LIM <<"\n";
 		_cdata << "31\n";
 		_cdata << "512\n";
 		_cdata << "assets/elements/circle.png\n";
@@ -573,6 +636,7 @@ void data_load_save()
 		_data >> x;
 		_data >> y;
 		_data >> FBD_THEME;
+		_data >> FBD_FPS_LIM;
 		_data >> NUM_OF_ELEMENTS;
 		_data >> MAX_ELEMENTS;
 		elements.resize(MAX_ELEMENTS);
@@ -586,8 +650,8 @@ void data_load_save()
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
 	}
 	//update cfg
-	if(FBD_VERSION != "1.0.2"){
-		FBD_VERSION = "1.0.2";
+	if(FBD_VERSION != "1.1"){
+		FBD_VERSION = "1.1";
 		
 		std::ofstream _udata;
 		_udata.open("assets/flagbuilder/flagbd.cfg");
@@ -596,6 +660,7 @@ void data_load_save()
 		_udata << x << "\n";
 		_udata << y << "\n";
 		_udata << FBD_THEME << "\n";
+		_udata << FBD_FPS_LIM <<"\n";
 		_udata << NUM_OF_ELEMENTS << "\n";
 		_udata << MAX_ELEMENTS << "\n";
 		for(int i=0; i<NUM_OF_ELEMENTS; i++){
@@ -606,10 +671,62 @@ void data_load_save()
 	}
 }
 
+void fbd_copy_paste(std::string action, std::string obj)
+{
+	if(obj == "color"){
+		if(action == "copy"){
+			saved_r = elements[store_id].r;
+			saved_g = elements[store_id].g;
+			saved_b = elements[store_id].b;
+		}
+		else{
+			elements[store_id].r = saved_r;
+			elements[store_id].g = saved_g;
+			elements[store_id].b = saved_b;
+			slider_r->setValue(elements[store_id].r);
+			slider_g->setValue(elements[store_id].g);
+			slider_b->setValue(elements[store_id].b);
+		}
+	}
+	if(obj == "scale"){
+		if(action == "copy"){
+			saved_scale_x = elements[store_id].scale_x;
+			saved_scale_y = elements[store_id].scale_y;
+		}
+		else{
+			elements[store_id].scale_x = saved_scale_x;
+			elements[store_id].scale_y = saved_scale_y;
+			ebox_scale_x->setText(std::to_string(elements[store_id].scale_x));
+			ebox_scale_y->setText(std::to_string(elements[store_id].scale_y));
+		}
+	}
+	if(obj == "pos"){
+		if(action == "copy"){
+			saved_pos_x = elements[store_id].pos_x;
+			saved_pos_y = elements[store_id].pos_y;
+		}
+		else{
+			elements[store_id].pos_x = saved_pos_x;
+			elements[store_id].pos_y = saved_pos_y;
+			ebox_pos_x->setText(std::to_string(elements[store_id].pos_x));
+			ebox_pos_y->setText(std::to_string(elements[store_id].pos_y));
+		}
+	}
+	if(obj == "rot"){
+		if(action == "copy"){
+			saved_rotation = elements[store_id].e_rotation;
+		}
+		else{
+			elements[store_id].e_rotation = saved_rotation;
+		}
+	}
+}
+
 int main()
 {
 	FBD_SET_DEF_DISPLAY();
 	FBD_SET_DEF_THEME();
+	FBD_SET_DEF_FPS_LIM();
 	data_load_save();
 	sf::RenderWindow window{{(unsigned int) x, (unsigned int) y}, "FlagBuilder "+FBD_VERSION};
 	gui.setTarget(window);
@@ -617,18 +734,26 @@ int main()
 	
 	tgui::Theme theme_main(FBD_THEME.c_str());
 	
+	sf::Image FBD_ICON;
+	if(!FBD_ICON.loadFromFile("assets/flagbuilder/gui/flagbd_logo_notext.png")){
+		std::cout<<"[x] Failed to load FlagBuilder icon."<<std::endl;
+	}
+	window.setIcon(FBD_ICON.getSize().x, FBD_ICON.getSize().y, FBD_ICON.getPixelsPtr());
+	
 	rdbutton_font_r->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_b->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_i->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_u->setRenderer(theme_main.getRenderer("RadioButton"));
 	rdbutton_font_st->setRenderer(theme_main.getRenderer("RadioButton"));
 	
-	window.setFramerateLimit(60);
+	window.setFramerateLimit(FBD_FPS_LIM);
 	//////////////////////////////////////////////
 	//	Solves issues with high CPU usage,		//
-	//	if usage is still high, try lowering or	//
-	//	disabling the FPS limit.				//
+	//	if usage is still high, try lowering	//
+	//	the FPS limit in config.				//
 	//	Also try checking your GPU drivers.		//
+	//	NOTE: FPS also affects the GUI callback	//
+	//	speed.									//
 	//////////////////////////////////////////////
 	
 	sf::Texture logo_texture;
@@ -647,7 +772,9 @@ int main()
 	auto zoom_slider = tgui::Slider::create();
 	
 	auto window_about = tgui::ChildWindow::create();
+	auto window_keyhelp = tgui::ChildWindow::create();
 	auto l_about = tgui::TextArea::create();
+	auto l_keybinds = tgui::TextArea::create();
 	
 	auto window_createfile = tgui::ChildWindow::create();
 	auto window_exportfile = tgui::FileDialog::create("Export file...", "Export");
@@ -674,6 +801,7 @@ int main()
 	menu_file_primary->addMenuItem({"View", "Smooth mode on/off"});
 	menu_file_primary->addMenu("Help");
 	menu_file_primary->addMenuItem({"Help", "About"});
+	menu_file_primary->addMenuItem({"Help", "Keybindings"});
 	menu_file_primary->setSize(sf::VideoMode::getDesktopMode().width,18);
 	menu_file_primary->setPosition(0,0);
 	lower_panel->setSize(sf::VideoMode::getDesktopMode().width,18);
@@ -691,6 +819,9 @@ int main()
 	window_about->setSize("30%","42%");
 	window_about->setTitle("About FlagBuilder");
 	window_about->setResizable(false);
+	window_keyhelp->setSize("30%","42%");
+	window_keyhelp->setTitle("Keybindings");
+	window_keyhelp->setResizable(false);
 	
 	window_createfile->setSize("30%","13%");
 	window_createfile->setTitle("Create file...");
@@ -762,14 +893,16 @@ int main()
 			tgui::String filepath = window_exportfile->getSelectedPaths()[0].asString();
 			rendered_texture.getTexture()->copyToImage().saveToFile(filepath.toStdString()); 
 		}
+		block_inputs = false;
 	});
 	
 	window_savefile->onFileSelect([&](){
 		if(!window_savefile->getSelectedPaths().empty()){
-		tgui::String filepath = window_savefile->getSelectedPaths()[0].asString();
-		save_file_path = filepath.toStdString()+".fbds"; 
-		save_file(); 
+			tgui::String filepath = window_savefile->getSelectedPaths()[0].asString();
+			save_file_path = filepath.toStdString()+".fbds"; 
+			save_file(); 
 		}
+		block_inputs = false;
 	});
 	
 	logo_sprite->setPosition("25%",0);
@@ -777,8 +910,13 @@ int main()
 	l_about->setPosition(0,"34%");
 	l_about->setReadOnly(true);
 	l_about->setText("FlagBuilder version "+FBD_VERSION+", an open-source flag-making tool written by Pravetz.\n FlagBuilder(or Flagbd) is distributed under GNU GPLv3 license.\n More information:\nhttps://github.com/Pravetz/Flagbd");
+	l_keybinds->setSize("100%", "100%");
+	l_keybinds->setPosition(0,0);
+	l_keybinds->setReadOnly(true);
+	l_keybinds->setText("Left, Right: move element on X-axis.\nUp, Down: move element on Y-axis.\n+, -: change scale(x and y) by +/-0.50(Numpad)\n*, /: rotate element by +/-1 degree.(Numpad)\n[LShift/RShift]+[R,G,B]: increase color R/G/B value(if LShift is pressed) or decrease if RShift is pressed.\nCtrl+C+[K, S, P, R]: copy color(K), scale(S), position(P), rotation(R).\nCtrl+V+[K, S, P, R]: paste color(K), scale(S), position(P), rotation(R).");
 	window_about->add(logo_sprite);
 	window_about->add(l_about);
+	window_keyhelp->add(l_keybinds);
 	
 	window_createfile->add(wcf_label_w);
 	window_createfile->add(wcf_label_h);
@@ -924,14 +1062,14 @@ int main()
 	element_mv_down_button->onPress(mv_element_down);
 	
 	button_center_element->onPress([&](){ elements[store_id].pos_x = f_x/2; elements[store_id].pos_y = f_y/2; });
-	copy_color->onPress([&](){ saved_r = elements[store_id].r; saved_g = elements[store_id].g; saved_b = elements[store_id].b; });
-	paste_color->onPress([&](){ elements[store_id].r = saved_r; elements[store_id].g = saved_g; elements[store_id].b = saved_b; });
-	copy_scale->onPress([&](){ saved_scale_x = elements[store_id].scale_x; saved_scale_y = elements[store_id].scale_y; });
-	paste_scale->onPress([&](){ elements[store_id].scale_x = saved_scale_x; elements[store_id].scale_y = saved_scale_y; });
-	copy_rotation->onPress([&](){ saved_rotation = elements[store_id].element_sprite.getRotation(); });
-	paste_rotation->onPress([&](){ elements[store_id].element_sprite.setRotation(saved_rotation); });
-	copy_position->onPress([&](){ saved_pos_x = elements[store_id].pos_x; saved_pos_y = elements[store_id].pos_y; });
-	paste_position->onPress([&](){ elements[store_id].pos_x = saved_pos_x; elements[store_id].pos_y = saved_pos_y; });
+	copy_color->onPress(fbd_copy_paste, "copy", "color");
+	paste_color->onPress(fbd_copy_paste, "paste", "color");
+	copy_scale->onPress(fbd_copy_paste, "copy", "scale");
+	paste_scale->onPress(fbd_copy_paste, "paste", "scale");
+	copy_rotation->onPress(fbd_copy_paste, "copy", "rot");
+	paste_rotation->onPress(fbd_copy_paste, "paste", "rot");
+	copy_position->onPress(fbd_copy_paste, "copy", "pos");
+	paste_position->onPress(fbd_copy_paste, "paste", "pos");
 	
 	wrapper_editb->add(button_center_element);
 	wrapper_editb->add(copy_color);
@@ -1070,10 +1208,11 @@ int main()
 	
 	//signals
 	menu_file_primary->connectMenuItem({"Help", "About"}, [&](){ gui.add(window_about); });
+	menu_file_primary->connectMenuItem({"Help", "Keybindings"}, [&](){ gui.add(window_keyhelp); });
 	menu_file_primary->connectMenuItem({"File", "Create..."}, [&](){ gui.add(window_createfile); });
-	menu_file_primary->connectMenuItem({"File", "Export..."}, [&](){ gui.add(window_exportfile); });
-	menu_file_primary->connectMenuItem({"File", "Save..."}, [&](){ gui.add(window_savefile); });
-	menu_file_primary->connectMenuItem({"File", "Open"}, [&](){ gui.add(window_openfile); });
+	menu_file_primary->connectMenuItem({"File", "Export..."}, [&](){ gui.add(window_exportfile); block_inputs = true; });
+	menu_file_primary->connectMenuItem({"File", "Save..."}, [&](){ gui.add(window_savefile); block_inputs = true; });
+	menu_file_primary->connectMenuItem({"File", "Open"}, [&](){ gui.add(window_openfile); block_inputs = true; });
 	menu_file_primary->connectMenuItem({"View", "Smooth mode on/off"}, [&]{
 		if(smooth_enabled){
 			smooth_enabled = false;
@@ -1132,6 +1271,7 @@ int main()
 			}
 		}
 		gui.remove(window_openfile);
+		block_inputs = false;
 	});
 	button_createfile->onPress([&]{
 		window.setView(display_view); 
@@ -1218,6 +1358,7 @@ int main()
 				_udata << x << "\n";
 				_udata << y << "\n";
 				_udata << FBD_THEME << "\n";
+				_udata << FBD_FPS_LIM <<"\n";
 				_udata << NUM_OF_ELEMENTS << "\n";
 				_udata << MAX_ELEMENTS << "\n";
 				for(int i=0; i<NUM_OF_ELEMENTS; i++){
@@ -1231,6 +1372,7 @@ int main()
 		}
 	});
 	
+	
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -1238,8 +1380,15 @@ int main()
 		{
 			gui.handleEvent(event);
 	
-			if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+			if(event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 				window.close();
+			
+			if(event.type == sf::Event::LostFocus){
+				block_inputs = true;
+			}
+			if(event.type == sf::Event::GainedFocus){
+				block_inputs = false;
+			}
 		}
 		if(FILE_OPEN){
 			menu_file_primary->setMenuItemEnabled({"File", "Save..."}, true);
@@ -1264,6 +1413,7 @@ int main()
 					elements[i].element_text.setFillColor(sf::Color(elements[i].r, elements[i].g, elements[i].b));
 					elements[i].element_text.setPosition(elements[i].pos_x, elements[i].pos_y);
 					elements[i].element_text.setScale(elements[i].scale_x, elements[i].scale_y);
+					elements[i].element_text.setCharacterSize(elements[i].element_text_size);
 				}
 			}
 			for(int i=0; i<MAX_ELEMENTS; i++){
@@ -1282,6 +1432,110 @@ int main()
 				del_element_button->setEnabled(false);
 				element_mv_up_button->setEnabled(false);
 				element_mv_down_button->setEnabled(false);
+			}
+			
+			//						KEYBOARD INPUTS							//
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && store_id > 0 && !block_inputs){
+				elements[store_id].pos_x--;
+				ebox_pos_x->setText(std::to_string(elements[store_id].pos_x));
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && store_id > 0 && !block_inputs){
+				elements[store_id].pos_x++;
+				ebox_pos_x->setText(std::to_string(elements[store_id].pos_x));
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && store_id > 0 && !block_inputs){
+				elements[store_id].pos_y--;
+				ebox_pos_y->setText(std::to_string(elements[store_id].pos_y));
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && store_id > 0 && !block_inputs){
+				elements[store_id].pos_y++;
+				ebox_pos_y->setText(std::to_string(elements[store_id].pos_y));
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Add) && store_id > 0 && !block_inputs){
+				if(elements[store_id].type == "heraldry"){
+					elements[store_id].scale_x+=0.10;
+					elements[store_id].scale_y+=0.10;
+					ebox_scale_x->setText(std::to_string(elements[store_id].scale_x));
+					ebox_scale_y->setText(std::to_string(elements[store_id].scale_y));
+				}
+				else{ elements[store_id].element_text_size++; }
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) && store_id > 0 && !block_inputs){
+				if(elements[store_id].type == "heraldry"){
+					elements[store_id].scale_x-=0.10;
+					elements[store_id].scale_y-=0.10;
+					ebox_scale_x->setText(std::to_string(elements[store_id].scale_x));
+					ebox_scale_y->setText(std::to_string(elements[store_id].scale_y));
+				}
+				else{ elements[store_id].element_text_size--; }
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Multiply) && store_id > 0 && !block_inputs){
+				if(elements[store_id].type == "heraldry"){ elements[store_id].element_sprite.rotate(1.0f); }
+				else { elements[store_id].element_text.rotate(1.0f); }
+			}
+			if(sf::Keyboard::isKeyPressed(sf::Keyboard::Divide) && store_id > 0 && !block_inputs){
+				if(elements[store_id].type == "heraldry"){ elements[store_id].element_sprite.rotate(-1.0f); }
+				else { elements[store_id].element_text.rotate(-1.0f); }
+			}
+			if((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && sf::Keyboard::isKeyPressed(sf::Keyboard::R)) && store_id > 0 && !block_inputs){
+				if(elements[store_id].r >= 0 && elements[store_id].r < 255){
+					elements[store_id].r++;
+					slider_r->setValue(elements[store_id].r);
+				}
+			}
+			if((sf::Keyboard::isKeyPressed(sf::Keyboard::RShift) && sf::Keyboard::isKeyPressed(sf::Keyboard::R)) && store_id > 0 && !block_inputs){
+				if(elements[store_id].r > 0 && elements[store_id].r <= 255){
+					elements[store_id].r--;
+					slider_r->setValue(elements[store_id].r);
+				}
+			}
+			if((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && store_id > 0 && !block_inputs){
+				if(elements[store_id].g >= 0 && elements[store_id].g < 255){
+					elements[store_id].g++;
+					slider_g->setValue(elements[store_id].g);
+				}
+			}
+			if((sf::Keyboard::isKeyPressed(sf::Keyboard::RShift) && sf::Keyboard::isKeyPressed(sf::Keyboard::G)) && store_id > 0 && !block_inputs){
+				if(elements[store_id].g > 0 && elements[store_id].g <= 255){
+					elements[store_id].g--;
+					slider_g->setValue(elements[store_id].g);
+				}
+			}
+			if((sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && sf::Keyboard::isKeyPressed(sf::Keyboard::B)) && store_id > 0 && !block_inputs){
+				if(elements[store_id].b >= 0 && elements[store_id].b < 255){
+					elements[store_id].b++;
+					slider_b->setValue(elements[store_id].b);
+				}
+			}
+			if((sf::Keyboard::isKeyPressed(sf::Keyboard::RShift) && sf::Keyboard::isKeyPressed(sf::Keyboard::B)) && store_id > 0 && !block_inputs){
+				if(elements[store_id].b > 0 && elements[store_id].b <= 255){
+					elements[store_id].b--;
+					slider_b->setValue(elements[store_id].b);
+				}
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::C) && sf::Keyboard::isKeyPressed(sf::Keyboard::K)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("copy","color");
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::V) && sf::Keyboard::isKeyPressed(sf::Keyboard::K)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("paste","color");
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::C) && sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("copy","scale");
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::V) && sf::Keyboard::isKeyPressed(sf::Keyboard::S)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("paste","scale");
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::C) && sf::Keyboard::isKeyPressed(sf::Keyboard::P)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("copy","pos");
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::V) && sf::Keyboard::isKeyPressed(sf::Keyboard::P)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("paste","pos");
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::C) && sf::Keyboard::isKeyPressed(sf::Keyboard::R)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("copy","rot");
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::V) && sf::Keyboard::isKeyPressed(sf::Keyboard::R)) && store_id > 0 && !block_inputs){
+				fbd_copy_paste("paste","rot");
 			}
 		}
 		else{
