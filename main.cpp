@@ -60,7 +60,7 @@ int saved_pos_y = 0;
 //	how much heraldry Flagbd can load and write paths to textures of// 
 //	the elements.													//
 //	To increase the number of heraldry change the line 2 in config	//
-//	Then add a path to the element after line 3 in flagbd.cfg		//
+//	Then add a path to the element after line 7 in flagbd.cfg		//
 //////////////////////////////////////////////////////////////////////
 
 ///////////////////////////ELEMENT DEFINES////////////////////////////
@@ -392,8 +392,8 @@ void open_file()
 		_save >> wrapper_y;
 		_save >> added_elements;
 		for(int i=1; i<MAX_ELEMENTS; i++){
-			_save >> elements[i].type;
 			_save.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::getline(_save, elements[i].type);
 			std::getline(_save, elements[i].path);
 			_save >> elements[i].r;
 			_save >> elements[i].g;
@@ -590,7 +590,7 @@ void data_load_save()
 		
 		_cdata.open("assets/flagbuilder/flagbd.cfg");
 		
-		_cdata << "1.1\n";
+		_cdata << "1.2\n";
 		_cdata << x << "\n";
 		_cdata << y << "\n";
 		_cdata << FBD_THEME << "\n";
@@ -650,8 +650,8 @@ void data_load_save()
 		std::cout<<"[^] Successfully created and opened .cfg file"<<std::endl;
 	}
 	//update cfg
-	if(FBD_VERSION != "1.1"){
-		FBD_VERSION = "1.1";
+	if(FBD_VERSION != "1.2"){
+		FBD_VERSION = "1.2";
 		
 		std::ofstream _udata;
 		_udata.open("assets/flagbuilder/flagbd.cfg");
@@ -809,9 +809,9 @@ int main()
 	zoom_slider->setSize(sf::VideoMode::getDesktopMode().width/16, 18);
 	zoom_slider->setPosition(0,0);
 	
-	zoom_slider->setStep(0.1);
+	zoom_slider->setStep(0.01);
 	zoom_slider->setMinimum(0.1);
-	zoom_slider->setMaximum(1.25);
+	zoom_slider->setMaximum(1.5);
 	zoom_slider->setValue(1);
 	
 	
@@ -913,7 +913,7 @@ int main()
 	l_keybinds->setSize("100%", "100%");
 	l_keybinds->setPosition(0,0);
 	l_keybinds->setReadOnly(true);
-	l_keybinds->setText("Left, Right: move element on X-axis.\nUp, Down: move element on Y-axis.\n+, -: change scale(x and y) by +/-0.50(Numpad)\n*, /: rotate element by +/-1 degree.(Numpad)\n[LShift/RShift]+[R,G,B]: increase color R/G/B value(if LShift is pressed) or decrease if RShift is pressed.\nCtrl+C+[K, S, P, R]: copy color(K), scale(S), position(P), rotation(R).\nCtrl+V+[K, S, P, R]: paste color(K), scale(S), position(P), rotation(R).");
+	l_keybinds->setText("Left, Right: move element on X-axis.\nUp, Down: move element on Y-axis.\n+, -: change scale(x and y) by +/-0.50(Numpad)\n*, /: rotate element by +/-1 degree.(Numpad)\n[LShift/RShift]+[R,G,B]: increase color R/G/B value(if LShift is pressed) or decrease if RShift is pressed.\nCtrl+C+[K, S, P, R]: copy color(K), scale(S), position(P), rotation(R).\nCtrl+V+[K, S, P, R]: paste color(K), scale(S), position(P), rotation(R).\nMouse wheel(clicked) - moves view.\nCtrl+W - reset view.");
 	window_about->add(logo_sprite);
 	window_about->add(l_about);
 	window_keyhelp->add(l_keybinds);
@@ -1240,7 +1240,7 @@ int main()
 	panel_heraldry->add(wrapper_heraldry);
 	layer_panel->add(wrapper_layers);
 	
-	zoom_slider->onValueChange([&]{ zoom_value = zoom_slider->getValue(); display_view.zoom(zoom_value); window.setView(display_view); std::cout<<"[i] zoom_value: "<<zoom_value<<std::endl; });
+	zoom_slider->onValueChange([&]{ zoom_value = zoom_slider->getValue(); display_view.zoom(zoom_value); window.setView(display_view); std::cout<<"[i] zoom_value: "<<zoom_value<<std::endl; zoom_value = 1; });
 	window_openfile->onFileSelect([&](){
 		if(!window_openfile->getSelectedPaths().empty()){
 			tgui::String filepath = window_openfile->getSelectedPaths()[0].asString();
@@ -1389,6 +1389,10 @@ int main()
 			if(event.type == sf::Event::GainedFocus){
 				block_inputs = false;
 			}
+			if(event.type == sf::Event::MouseWheelMoved && !block_inputs){
+				zoom_value -= 0.1*event.mouseWheel.delta;
+				zoom_slider->setValue(zoom_value);
+			}
 		}
 		if(FILE_OPEN){
 			menu_file_primary->setMenuItemEnabled({"File", "Save..."}, true);
@@ -1536,6 +1540,14 @@ int main()
 			}
 			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::V) && sf::Keyboard::isKeyPressed(sf::Keyboard::R)) && store_id > 0 && !block_inputs){
 				fbd_copy_paste("paste","rot");
+			}
+			if(sf::Mouse::isButtonPressed(sf::Mouse::Middle) && !block_inputs){
+				display_view.setCenter(sf::Vector2f(sf::Mouse::getPosition()));
+				window.setView(display_view);
+			}
+			if(((sf::Keyboard::isKeyPressed(sf::Keyboard::LControl) || sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) && sf::Keyboard::isKeyPressed(sf::Keyboard::W)) && !block_inputs){
+				display_view.setCenter(x/2,y/2);
+				window.setView(display_view);
 			}
 		}
 		else{
